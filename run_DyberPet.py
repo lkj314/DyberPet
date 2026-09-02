@@ -15,6 +15,7 @@ from PySide6.QtCore import Qt, QLocale, QTimer, QDateTime, QDate, Signal, QTime
 from qfluentwidgets import  FluentTranslator, setThemeColor
 from DyberPet.DyberSettings.DyberControlPanel import ControlMainWindow
 from DyberPet.Dashboard.DashboardUI import DashboardMainWindow
+from DyberPet.lol_companion import LoLCompanionWorker
 
 try:
     size_factor = 1 #ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100
@@ -61,6 +62,14 @@ class DyberPetApp(QApplication):
 
         # Pet Object
         self.p = PetWidget(screens=screens)
+
+        # [LoL 陪玩] 实时解说 + 情绪反应（默认开启，可在设置关闭）
+        # 线程始终启动：设置关闭时内部空转，开启后可即时响应
+        self.companion = LoLCompanionWorker()
+        self.companion.caster_line.connect(self.p.sig_caster_line)
+        self.companion.companion_react.connect(self.p.sig_companion_react)
+        self.companion.start()
+        self.aboutToQuit.connect(self._stop_companion)
 
         # Notification System
         self.note = DPNote()
@@ -167,6 +176,13 @@ class DyberPetApp(QApplication):
             self.current_date = new_date
             self.date_changed.emit(new_date)
         self.set_midnight_timer()  # Reset the timer for the next midnight
+
+    def _stop_companion(self):
+        """退出时停止 LoL 陪玩后台线程。"""
+        comp = getattr(self, 'companion', None)
+        if comp is not None:
+            comp.stop()
+            comp.wait(2000)
 
 
         

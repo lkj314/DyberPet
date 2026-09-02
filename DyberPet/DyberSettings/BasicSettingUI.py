@@ -199,6 +199,66 @@ class SettingInterface(ScrollArea):
         )
         self.themeColorCard.colorChanged.connect(self.colorChanged)
 
+        # LoL Companion ==============================================================================
+        self.CompanionGroup = SettingCardGroup(self.tr('LoL Companion'), self.scrollWidget)
+        self.CompanionEnableCard = SwitchSettingCard(
+            FIF.GAME,
+            self.tr("Enable Game Companion"),
+            self.tr("When turned on, Paimon will commentate your League of Legends matches"),
+            parent=self.CompanionGroup
+        )
+        if settings.lol_companion_enabled:
+            self.CompanionEnableCard.setChecked(True)
+        else:
+            self.CompanionEnableCard.setChecked(False)
+        self.CompanionEnableCard.switchButton.checkedChanged.connect(self._CompanionEnableChanged)
+
+        self.CompanionModelCard = Dyber_ComboBoxSettingCard(
+            ["qwen2.5:7b", "qwen2.5:3b", "gemma4:latest", "llama3.1:8b"],
+            ["qwen2.5:7b", "qwen2.5:3b", "gemma4:latest", "llama3.1:8b"],
+            FIF.ROBOT,
+            self.tr('Commentary Model'),
+            self.tr('Local Ollama model used to generate real-time commentary'),
+            parent=self.CompanionGroup
+        )
+        self.CompanionModelCard.comboBox.setCurrentText(settings.lol_companion_model)
+        self.CompanionModelCard.comboBox.currentTextChanged.connect(self._CompanionModelChanged)
+
+        self.CompanionStyleCard = Dyber_ComboBoxSettingCard(
+            ["肥牛", "电竞主播", "温柔吐槽", "暴躁老哥"],
+            ["肥牛", "电竞主播", "温柔吐槽", "暴躁老哥"],
+            FIF.EMOJI_TAB_SYMBOLS,
+            self.tr('Commentary Style'),
+            self.tr('Personality of the AI commentary'),
+            parent=self.CompanionGroup
+        )
+        self.CompanionStyleCard.comboBox.setCurrentText(settings.lol_companion_style)
+        self.CompanionStyleCard.comboBox.currentTextChanged.connect(self._CompanionStyleChanged)
+
+        self.CompanionReactionCard = SwitchSettingCard(
+            FIF.MOVIE,
+            self.tr("Emotion Reactions"),
+            self.tr("When turned on, Paimon will bounce/shake/scale according to the situation"),
+            parent=self.CompanionGroup
+        )
+        if settings.lol_companion_reactions:
+            self.CompanionReactionCard.setChecked(True)
+        else:
+            self.CompanionReactionCard.setChecked(False)
+        self.CompanionReactionCard.switchButton.checkedChanged.connect(self._CompanionReactionChanged)
+
+        self.CompanionBubbleCard = SwitchSettingCard(
+            QIcon(os.path.join(basedir, 'res/icons/system/bubble.svg')),
+            self.tr("Commentary Bubble"),
+            self.tr("When turned on, commentary text will pop-up above the pet"),
+            parent=self.CompanionGroup
+        )
+        if settings.lol_companion_bubble:
+            self.CompanionBubbleCard.setChecked(True)
+        else:
+            self.CompanionBubbleCard.setChecked(False)
+        self.CompanionBubbleCard.switchButton.checkedChanged.connect(self._CompanionBubbleChanged)
+
         # About ==============================================================================
         self.aboutGroup = SettingCardGroup(self.tr('About'), self.scrollWidget)
         update_needed, update_text = self._checkUpdate()
@@ -266,6 +326,12 @@ class SettingInterface(ScrollArea):
         self.PersonalGroup.addSettingCard(self.languageCard)
         self.PersonalGroup.addSettingCard(self.themeColorCard)
 
+        self.CompanionGroup.addSettingCard(self.CompanionEnableCard)
+        self.CompanionGroup.addSettingCard(self.CompanionModelCard)
+        self.CompanionGroup.addSettingCard(self.CompanionStyleCard)
+        self.CompanionGroup.addSettingCard(self.CompanionReactionCard)
+        self.CompanionGroup.addSettingCard(self.CompanionBubbleCard)
+
         self.aboutGroup.addSettingCard(self.aboutCard)
         self.aboutGroup.addSettingCard(self.helpCard)
         self.aboutGroup.addSettingCard(self.devCard)
@@ -278,6 +344,7 @@ class SettingInterface(ScrollArea):
         self.expandLayout.addWidget(self.InteractionGroup)
         self.expandLayout.addWidget(self.VolumnGroup)
         self.expandLayout.addWidget(self.PersonalGroup)
+        self.expandLayout.addWidget(self.CompanionGroup)
         self.expandLayout.addWidget(self.aboutGroup)
 
     def __setQss(self):
@@ -363,15 +430,8 @@ class SettingInterface(ScrollArea):
 
     def _checkUpdate(self):
         local_version = settings.VERSION
-        success, github_version = get_latest_version()
-        if success:
-            update_needed = compare_versions(local_version, github_version)
-            if update_needed:
-                return True, local_version + "  " + self.tr("New version available")
-            else:
-                return False, local_version + "  " + self.tr("Already the latest")
-        else:
-            return False, self.tr("Failed to check updates. Please check the website.")
+        # 关闭官方更新检查（避免打包版弹出官方新版本提示）
+        return False, local_version + "  " + self.tr("Update check disabled")
         
     def _AllowToasterChanged(self, isChecked):
         if isChecked:
@@ -387,8 +447,25 @@ class SettingInterface(ScrollArea):
             settings.bubble_on = False
         settings.save_settings()
 
+    def _CompanionEnableChanged(self, isChecked):
+        settings.lol_companion_enabled = bool(isChecked)
+        settings.save_settings()
 
+    def _CompanionModelChanged(self, value):
+        settings.lol_companion_model = value
+        settings.save_settings()
 
+    def _CompanionStyleChanged(self, value):
+        settings.lol_companion_style = value
+        settings.save_settings()
+
+    def _CompanionReactionChanged(self, isChecked):
+        settings.lol_companion_reactions = bool(isChecked)
+        settings.save_settings()
+
+    def _CompanionBubbleChanged(self, isChecked):
+        settings.lol_companion_bubble = bool(isChecked)
+        settings.save_settings()
 
 
 def get_latest_version():

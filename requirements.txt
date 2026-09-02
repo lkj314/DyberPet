@@ -1,0 +1,27 @@
+# DyberPet 开发环境依赖定版
+# ---------------------------------------------------------------
+# 本文件锁定的是「当前在 U:\live2d\DyberPet\.venv (Python 3.12.10) 已验证可导入/启动」的组合。
+#
+# ⚠️ 与原版 README 的偏离说明：
+#    README 锁定的是 PySide6==6.5.2 + PySide6-Fluent-Widgets==1.5.4，且只支持 Python 3.9~3.11。
+#    该旧版 PySide6 没有 cp312/cp313 的 wheel，在本环境（仅 3.12/3.13）无法安装，
+#    故此处改用互相兼容的新版组合（Python 3.12 + 新版 PySide6/qfluentwidgets）。
+#    如果你要 1:1 还原原版底座，请在本机用 Python 3.11 装下面「README 原版」区块的版本。
+# ---------------------------------------------------------------
+
+# ---- 当前已验证可用（Python 3.12）----
+PySide6==6.11.2
+PySide6-Fluent-Widgets==1.11.3      # import 名: qfluentwidgets
+PySideSix-Frameless-Window==0.8.2   # import 名: qframelesswindow
+apscheduler==3.11.3
+pynput==1.8.2
+tendo==0.3.0
+requests==2.34.2            # LoL Companion: LCU 2999 轮询 + 本机 Ollama 解说调用
+
+# ---- README 原版（仅 Python 3.9~3.11 可装，作参考）----
+# PySide6==6.5.2
+# PySide6-Fluent-Widgets==1.5.4
+# PySideSix-Frameless-Window==0.7.0   # 与 6.5.2 时期配套的版本
+# apscheduler
+# pynput
+# tendo

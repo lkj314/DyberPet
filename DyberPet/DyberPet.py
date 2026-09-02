@@ -12,7 +12,7 @@ import pynput.mouse as mouse
 
 from PySide6.QtWidgets import *
 from PySide6.QtCore import Qt, QTimer, QObject, QPoint, QEvent, QElapsedTimer
-from PySide6.QtCore import QObject, QThread, Signal, QRectF, QRect, QSize, QPropertyAnimation, QAbstractAnimation
+from PySide6.QtCore import QObject, QThread, Signal, QRectF, QRect, QSize, QPropertyAnimation, QAbstractAnimation, QEasingCurve
 from PySide6.QtGui import QImage, QPixmap, QIcon, QCursor, QPainter, QFont, QFontMetrics, QAction, QBrush, QPen, QColor, QFontDatabase, QPainterPath, QRegion, QIntValidator, QDoubleValidator
 
 from qfluentwidgets import CaptionLabel, setFont, Action #,RoundMenu
@@ -385,6 +385,10 @@ class PetWidget(QWidget):
 
     refresh_acts = Signal(name='refresh_acts')
 
+    # [LoL 陪玩] 外部触发接口（由 LoLCompanionWorker 跨线程 emit）
+    sig_caster_line = Signal(str, name='sig_caster_line')
+    sig_companion_react = Signal(str, name='sig_companion_react')
+
     def __init__(self, parent=None, curr_pet_name=None, pets=(), screens=[]):
         """
         宠物组件
@@ -431,6 +435,10 @@ class PetWidget(QWidget):
         self.show()
 
         self._setup_ui()
+
+        # [LoL 陪玩] 外部信号 → 气泡 / 情绪反应
+        self.sig_caster_line.connect(self.show_speech)
+        self.sig_companion_react.connect(self.react)
 
         # 开始动画模块和交互模块
         self.threads = {}
@@ -1382,6 +1390,64 @@ class PetWidget(QWidget):
 
     def _process_greeting_mssg(self, bubble_dict:dict):
         self.bubble_manager.add_usertag(bubble_dict, 'end', send=True)
+
+    # ------------------------------------------------------------------ #
+    # [LoL 陪玩] 外部触发方法
+    # ------------------------------------------------------------------ #
+    def show_speech(self, text: str):
+        """把解说词以气泡形式展示。bubble_type=None 避免连续解说被去重吞掉。"""
+        if not text:
+            return
+        self.bubble_manager.register_bubble.emit({'message': text, 'bubble_type': None})
+
+    def react(self, emotion: str):
+        """按情绪对宠物做程序化 transform 反应（蹦跳 / 摇晃 / 缩放）。"""
+        emo = (emotion or 'calm').lower()
+        if emo in ('calm', ''):
+            return
+        try:
+            self.workers['Animation'].pause()
+        except Exception:
+            pass
+        label = self.label
+        base = label.geometry()
+        anim = QPropertyAnimation(label, b"geometry")
+        anim.setDuration(420)
+        anim.setEasingCurve(QEasingCurve.OutCubic)
+        if emo == 'happy':
+            anim.setKeyValueAt(0.0, base)
+            anim.setKeyValueAt(0.5, QRect(base.x(), base.y() - 12, base.width(), base.height()))
+            anim.setKeyValueAt(1.0, base)
+        elif emo == 'excited':
+            anim.setDuration(520)
+            anim.setKeyValueAt(0.0, base)
+            anim.setKeyValueAt(0.5, QRect(base.x(), base.y() - 22, base.width(), base.height()))
+            anim.setKeyValueAt(1.0, base)
+        elif emo == 'taunt':
+            anim.setKeyValueAt(0.0, base)
+            anim.setKeyValueAt(0.33, QRect(base.x() - 8, base.y(), base.width(), base.height()))
+            anim.setKeyValueAt(0.66, QRect(base.x() + 8, base.y(), base.width(), base.height()))
+            anim.setKeyValueAt(1.0, base)
+        elif emo == 'worried':
+            anim.setKeyValueAt(0.0, base)
+            anim.setKeyValueAt(0.33, QRect(base.x() - 5, base.y(), base.width(), base.height()))
+            anim.setKeyValueAt(0.66, QRect(base.x() + 5, base.y(), base.width(), base.height()))
+            anim.setKeyValueAt(1.0, base)
+        elif emo == 'sad':
+            anim.setKeyValueAt(0.0, base)
+            anim.setKeyValueAt(0.5, QRect(base.x(), base.y() + 8,
+                                          int(base.width() * 0.94), int(base.height() * 0.94)))
+            anim.setKeyValueAt(1.0, base)
+        else:
+            return
+        anim.finished.connect(self._resume_anim_safe)
+        anim.start()
+
+    def _resume_anim_safe(self):
+        try:
+            self.workers['Animation'].resume()
+        except Exception:
+            pass
 
     def register_accessory(self, accs):
         self.setup_acc.emit(accs, self.pos().x()+self.width()//2, self.pos().y()+self.height())

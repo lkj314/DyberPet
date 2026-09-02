@@ -33,3 +33,9 @@ res/items/Pikesou
 res/role/像素猫meme
 res/role/咕咕
 res/role/守岸人
+
+# LoL 陪玩开发环境（本地 venv + 安装日志 + 打包产物）
+.venv/
+*.log
+DyberPet.spec
+*.zip

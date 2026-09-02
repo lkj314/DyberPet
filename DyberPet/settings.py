@@ -8,6 +8,13 @@ from PySide6.QtGui import QImage, QPixmap
 from DyberPet.conf import PetData, TaskData, ActData, ItemData
 from PySide6 import QtCore
 
+# [LoL 陪玩] 默认开启，可在设置中关闭
+lol_companion_enabled = True
+lol_companion_model = "qwen2.5:7b"
+lol_companion_style = "肥牛"
+lol_companion_reactions = True
+lol_companion_bubble = True
+
 if platform == 'win32':
     basedir = ''
     BASEDIR = ''
@@ -224,7 +231,8 @@ def init_settings():
 
     global gravity, fixdragspeedx, fixdragspeedy, tunable_scale, scale_dict, volume, \
            language_code, on_top_hint, default_pet, defaultAct, themeColor, minipet_scale, \
-           toaster_on, usertag_dict, auto_lock, bubble_on
+           toaster_on, usertag_dict, auto_lock, bubble_on, \
+           lol_companion_enabled, lol_companion_model, lol_companion_style, lol_companion_reactions, lol_companion_bubble
 
     # check json file integrity
     try:
@@ -314,6 +322,14 @@ def init_settings():
         bubble_on = data_params.get('bubble_on', True)
         #=====================================================
 
+        # [LoL 陪玩] 默认开启
+        lol_companion_enabled = data_params.get('lol_companion_enabled', True)
+        lol_companion_model = data_params.get('lol_companion_model', 'qwen2.5:7b')
+        lol_companion_style = data_params.get('lol_companion_style', '肥牛')
+        lol_companion_reactions = data_params.get('lol_companion_reactions', True)
+        lol_companion_bubble = data_params.get('lol_companion_bubble', True)
+        #=====================================================
+
     else:
         fixdragspeedx, fixdragspeedy = 1.0, 1.0
         gravity = 0.1
@@ -334,13 +350,19 @@ def init_settings():
         bubble_on = True
         usertag_dict = {}
         auto_lock = False
+        lol_companion_enabled = True
+        lol_companion_model = 'qwen2.5:7b'
+        lol_companion_style = '肥牛'
+        lol_companion_reactions = True
+        lol_companion_bubble = True
     check_locale()
     save_settings()
 
 def save_settings():
     global file_path, set_fall, gravity, fixdragspeedx, fixdragspeedy, scale_dict, volume, \
            language_code, on_top_hint, default_pet, defaultAct, themeColor, minipet_scale, \
-           toaster_on, usertag_dict, auto_lock, bubble_on
+           toaster_on, usertag_dict, auto_lock, bubble_on, \
+           lol_companion_enabled, lol_companion_model, lol_companion_style, lol_companion_reactions, lol_companion_bubble
 
     data_js = {'gravity':gravity,
                'set_fall': set_fall,
@@ -353,6 +375,11 @@ def save_settings():
                'on_top_hint':on_top_hint,
                'toaster_on':toaster_on,
                'bubble_on':bubble_on,
+               'lol_companion_enabled':lol_companion_enabled,
+               'lol_companion_model':lol_companion_model,
+               'lol_companion_style':lol_companion_style,
+               'lol_companion_reactions':lol_companion_reactions,
+               'lol_companion_bubble':lol_companion_bubble,
                'default_pet':default_pet,
                'defaultAct':defaultAct,
                'language_code':language_code,
