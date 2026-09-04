@@ -39,3 +39,7 @@ res/role/守岸人
 *.log
 DyberPet.spec
 *.zip
+
+# 本地大模型权重（2.3GB+ GGUF，绝不入库，仅本地推理用）
+models/
+*.gguf

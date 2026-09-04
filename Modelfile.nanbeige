@@ -1,0 +1,16 @@
+FROM ./models/nanbeige4.1-3b-Q4_K_M.gguf
+
+# Nanbeige4.1-3B uses ChatML. Provide it explicitly so chat works even if
+# the GGUF metadata does not embed a template.
+TEMPLATE """{{ if .System }}<|im_start|>system
+{{ .System }}<|im_end|>
+{{ end }}{{ if .Prompt }}<|im_start|>user
+{{ .Prompt }}<|im_end|>
+{{ end }}<|im_start|>assistant
+{{ .Response }}<|im_end|>
+"""
+
+PARAMETER num_ctx 8192
+PARAMETER temperature 0.7
+PARAMETER top_p 0.95
+PARAMETER repeat_penalty 1.0
