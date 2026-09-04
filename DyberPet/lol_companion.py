@@ -146,6 +146,19 @@ COMPANION_PROMPT = (
 )
 
 # 可在设置面板切换的解说风格
+# 用于检测模型把系统提示词吐出来的 markers
+# 如果模型回复里出现这些句子/片段，说明它没正确遵循角色，直接把回复当空处理。
+PROMPT_LEAK_MARKERS = [
+    "不要输出任何代码、JSON、URL、Markdown 或思考过程标记",
+    "像真人朋友在微信上回消息",
+    "永远站在用户这一边",
+    "用户拿人头就激情欢呼",
+    "不要机械报数",
+    "不要编造对局里没有的信息",
+    "只输出这句解说本身",
+    "只输出你的回复本身",
+]
+
 STYLE_PROMPTS = {
     "肥牛": (
         "你是肥牛，一位激情澎湃的英雄联盟海克斯大乱斗(ARAM)专属解说员。"
@@ -382,6 +395,8 @@ def sanitize_commentary(text: str) -> str:
     t = str(text)
     t = re.sub(r"<think>[\s\S]*?</think>", "", t, flags=re.IGNORECASE)
     t = re.sub(r"<tool_call>[\s\S]*?</tool_call>", "", t, flags=re.IGNORECASE)
+    # 部分模型会在结尾吐出自己的停止符
+    t = t.replace("<end_of_turn>", "")
     t = re.sub(r"<[^>]+>", "", t)
     t = re.sub(r"```[\s\S]*?```", "", t)
     t = re.sub(r"`[^`]*`", "", t)
@@ -394,6 +409,10 @@ def sanitize_commentary(text: str) -> str:
     t = re.sub(r"\s+", " ", t).strip()
     if len(t) >= 2 and t[0] in "\"'\u201c\u2018" and t[-1] in "\"'\u201d\u2019":
         t = t[1:-1].strip()
+    # 如果模型把系统提示词吐出来了，当成空回复处理（避免在聊天窗口泄露 prompt）
+    lower = t.lower()
+    if any(marker.lower() in lower for marker in PROMPT_LEAK_MARKERS):
+        return ""
     if len(t) > 80:
         cut = t[:80]
         for sep in ("。", "！", "？", "!", "?"):

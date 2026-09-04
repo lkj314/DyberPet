@@ -26,6 +26,9 @@ from DyberPet.lol_companion import Caster, COMPANION_PROMPT, sanitize_commentary
 
 logger = logging.getLogger(__name__)
 
+# 模型没产出正文时的兜底回复（不要把它写进多轮历史，避免污染上下文）
+EMPTY_REPLY_FALLBACK = "我脑子空白了，再试一次？"
+
 # 音色：设置项显示名 -> edge-tts voice id
 VOICE_OPTIONS = {
     "云希(男·活力)": "zh-CN-YunxiNeural",
@@ -113,7 +116,7 @@ class ChatWorker(QThread):
             raw = self.caster._post(messages, num_predict=160, raise_on_error=True)
             reply = sanitize_commentary(raw)
             if not reply:
-                reply = "我好像空白了，再试一次？"
+                reply = EMPTY_REPLY_FALLBACK
             self.reply_ready.emit(reply)
         except RuntimeError as e:
             logger.warning("chat worker runtime error: %s", e)
@@ -335,11 +338,14 @@ class ChatManager(QObject):
         self._chat_thread.start()
 
     def _on_reply(self, reply):
-        self.history.append((self._last_user or "", reply))
+        # 兜底回复只是占位提示，不写进多轮历史，否则模型会把它当成自己说过的话继续接龙，
+        # 容易出现“把系统提示词吐出来”之类的奇怪现象。
+        if reply != EMPTY_REPLY_FALLBACK:
+            self.history.append((self._last_user or "", reply))
         self.window.on_reply(reply)
         self.window.set_sending(False)
         self.sig_reply.emit(reply)
-        if settings.chat_tts:
+        if settings.chat_tts and reply != EMPTY_REPLY_FALLBACK:
             self._speak(reply)
 
     def _on_error(self, err):

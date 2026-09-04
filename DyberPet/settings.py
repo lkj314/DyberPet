@@ -331,18 +331,25 @@ def init_settings():
 
         # [LoL 陪玩] 默认开启
         lol_companion_enabled = data_params.get('lol_companion_enabled', True)
-        lol_companion_model = data_params.get('lol_companion_model', 'nanbeige4.1:3b')
+        lol_companion_model = data_params.get('lol_companion_model', 'gemma3:4b')
         lol_companion_style = data_params.get('lol_companion_style', '肥牛')
         lol_companion_reactions = data_params.get('lol_companion_reactions', True)
         lol_companion_bubble = data_params.get('lol_companion_bubble', True)
         #=====================================================
 
         # [对话] 桌宠聊天
-        chat_model = data_params.get('chat_model', 'nanbeige4.1:3b')
+        chat_model = data_params.get('chat_model', 'gemma3:4b')
         chat_tts = data_params.get('chat_tts', True)
         chat_stt = data_params.get('chat_stt', False)
         chat_voice = data_params.get('chat_voice', '云希(男·活力)')
         #=====================================================
+
+        # 迁移：已确认 nanbeige4.1:3b 为思考型模型，实时解说/对话会空回复或泄露 prompt，
+        # 如果用户之前保存过这个默认值，自动切到可用的 gemma3:4b。
+        if lol_companion_model == 'nanbeige4.1:3b':
+            lol_companion_model = 'gemma3:4b'
+        if chat_model == 'nanbeige4.1:3b':
+            chat_model = 'gemma3:4b'
 
     else:
         fixdragspeedx, fixdragspeedy = 1.0, 1.0
@@ -365,11 +372,11 @@ def init_settings():
         usertag_dict = {}
         auto_lock = False
         lol_companion_enabled = True
-        lol_companion_model = 'nanbeige4.1:3b'
+        lol_companion_model = 'gemma3:4b'
         lol_companion_style = '肥牛'
         lol_companion_reactions = True
         lol_companion_bubble = True
-        chat_model = 'nanbeige4.1:3b'
+        chat_model = 'gemma3:4b'
         chat_tts = True
         chat_stt = False
         chat_voice = '云希(男·活力)'
