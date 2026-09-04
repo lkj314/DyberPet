@@ -10,13 +10,13 @@ from PySide6 import QtCore
 
 # [LoL 陪玩] 默认开启，可在设置中关闭
 lol_companion_enabled = True
-lol_companion_model = "qwen2.5:3b"
+lol_companion_model = "gemma3:4b"
 lol_companion_style = "肥牛"
 lol_companion_reactions = True
 lol_companion_bubble = True
 
 # [对话] 桌宠聊天窗口配置（语音播报 / 语音输入 / 音色 / 模型）
-chat_model = "qwen2.5:3b"
+chat_model = "gemma3:4b"
 chat_tts = True
 chat_stt = False
 chat_voice = "云希(男·活力)"
