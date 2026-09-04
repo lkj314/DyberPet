@@ -449,7 +449,27 @@ class Caster:
             return "塔没了！冲！"
         return "这波有点意思。"
 
-    def _post(self, messages: List[Dict], num_predict: int = 80) -> str:
+    def _check_ollama(self) -> str:
+        """检查 Ollama 服务是否可用，返回错误信息或空字符串表示正常。"""
+        try:
+            resp = _LOCAL_SESSION.get(f"{self.ollama_base}/api/tags",
+                                      timeout=5, proxies={"http": None, "https": None})
+            resp.raise_for_status()
+            data = resp.json()
+            models = [m.get("name", "") for m in data.get("models", [])]
+            wanted = settings.lol_companion_model or self.model or DEFAULT_MODEL
+            if wanted not in models:
+                return f"Ollama 里没找到模型 '{wanted}'，请先运行：ollama pull {wanted}"
+            return ""
+        except requests.exceptions.ConnectionError:
+            return f"连不上 Ollama（{self.ollama_base}）。请先启动 Ollama。"
+        except requests.exceptions.Timeout:
+            return "Ollama 响应超时，可能正在加载模型。"
+        except Exception as e:  # noqa: BLE001
+            return f"检查 Ollama 状态时出错：{e}"
+
+    def _post(self, messages: List[Dict], num_predict: int = 80,
+              raise_on_error: bool = False) -> str:
         payload = {
             "model": settings.lol_companion_model or self.model or DEFAULT_MODEL,
             "stream": False,
@@ -459,11 +479,41 @@ class Caster:
         }
         try:
             resp = _LOCAL_SESSION.post(f"{self.ollama_base}/api/chat", json=payload,
-                                       timeout=12, proxies={"http": None, "https": None})
+                                       timeout=30, proxies={"http": None, "https": None})
+            if resp.status_code == 404:
+                wanted = settings.lol_companion_model or self.model or DEFAULT_MODEL
+                msg = f"模型 '{wanted}' 不存在，请先运行：ollama pull {wanted}"
+                if raise_on_error:
+                    raise RuntimeError(msg)
+                logger.warning(msg)
+                return ""
             resp.raise_for_status()
-            return resp.json()["message"]["content"].strip()
-        except Exception:  # noqa: BLE001
-            logger.warning("Ollama chat call failed")
+            data = resp.json()
+            return data["message"]["content"].strip()
+        except requests.exceptions.ConnectionError as e:
+            msg = f"连不上 Ollama（{self.ollama_base}）。请先启动 Ollama。"
+            if raise_on_error:
+                raise RuntimeError(msg) from e
+            logger.warning("Ollama chat call failed: connection refused")
+            return ""
+        except requests.exceptions.Timeout as e:
+            msg = "Ollama 响应超时（可能正在加载模型或 GPU 忙）。"
+            if raise_on_error:
+                raise RuntimeError(msg) from e
+            logger.warning("Ollama chat call failed: timeout")
+            return ""
+        except requests.exceptions.HTTPError as e:
+            body = getattr(e.response, "text", "")[:200]
+            msg = f"Ollama 返回错误 ({e.response.status_code}): {body or '无详情'}"
+            if raise_on_error:
+                raise RuntimeError(msg) from e
+            logger.warning("Ollama chat call failed: HTTP %s", e.response.status_code)
+            return ""
+        except (KeyError, ValueError) as e:
+            msg = "Ollama 返回格式异常，无法解析回复。"
+            if raise_on_error:
+                raise RuntimeError(msg) from e
+            logger.warning("Ollama chat call failed: bad response")
             return ""
 
     def _call_llm(self, prompt: str) -> str:

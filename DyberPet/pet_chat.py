@@ -110,14 +110,17 @@ class ChatWorker(QThread):
                 messages.append({"role": "user", "content": u})
                 messages.append({"role": "assistant", "content": a})
             messages.append({"role": "user", "content": self.text})
-            raw = self.caster._post(messages, num_predict=160)
+            raw = self.caster._post(messages, num_predict=160, raise_on_error=True)
             reply = sanitize_commentary(raw)
             if not reply:
-                reply = "刚才卡了一下，再说一遍？"
+                reply = "我好像空白了，再试一次？"
             self.reply_ready.emit(reply)
+        except RuntimeError as e:
+            logger.warning("chat worker runtime error: %s", e)
+            self.error.emit(str(e))
         except Exception as e:  # noqa: BLE001
             logger.exception("chat worker failed")
-            self.error.emit(str(e))
+            self.error.emit(f"对话出错：{e}")
 
 
 # --------------------------------------------------------------------------- #
@@ -233,12 +236,21 @@ class PetChatWindow(QWidget):
     def on_reply(self, text):
         self.append_message(settings.default_pet, text)
 
+    def set_sending(self, sending: bool):
+        self.send_btn.setEnabled(not sending)
+        self.input.setEnabled(not sending)
+        if sending:
+            self.status.setText("思考中…")
+        else:
+            self.status.setText("")
+
     def _on_send(self):
         text = self.input.text().strip()
         if not text:
             return
         self.append_message("你", text)
         self.input.clear()
+        self.set_sending(True)
         self.manager.send(text)
 
     def _on_voice_press(self):
@@ -283,12 +295,40 @@ class ChatManager(QObject):
         self.window.show()
         self.window.raise_()
         self.window.activateWindow()
+        # 打开窗口时异步检查 Ollama 状态，给用户即时反馈
+        self._check_ollama_async()
+
+    def _check_ollama_async(self):
+        class CheckThread(QThread):
+            result = Signal(str)
+            def __init__(self, caster):
+                super().__init__()
+                self.caster = caster
+            def run(self):
+                self.result.emit(self.caster._check_ollama())
+        self._check_thread = CheckThread(self.caster)
+        self._check_thread.result.connect(self._on_ollama_status)
+        self._check_thread.start()
+
+    def _on_ollama_status(self, err: str):
+        if err:
+            self.window.status.setText("❌ %s" % err)
+            self.window.append_message(settings.default_pet,
+                                       "我脑子暂时不在线～%s" % err)
+        else:
+            self.window.status.setText("✅ Ollama 就绪")
 
     # ---- 对话 ----
     def send(self, text):
         self._last_user = text
         if self._chat_thread is not None and self._chat_thread.isRunning():
             return
+        # 先发制人检查 Ollama，避免空跑一轮再报错
+        err = self.caster._check_ollama()
+        if err:
+            self._on_error(err)
+            return
+        self.window.set_sending(True)
         self._chat_thread = ChatWorker(self.caster, text, self.history)
         self._chat_thread.reply_ready.connect(self._on_reply)
         self._chat_thread.error.connect(self._on_error)
@@ -297,15 +337,22 @@ class ChatManager(QObject):
     def _on_reply(self, reply):
         self.history.append((self._last_user or "", reply))
         self.window.on_reply(reply)
+        self.window.set_sending(False)
         self.sig_reply.emit(reply)
         if settings.chat_tts:
             self._speak(reply)
 
     def _on_error(self, err):
-        self.window.status.setText("对话出错：%s" % err)
-        # 兜底：Ollama 没开时给个提示
-        self.window.append_message(settings.default_pet,
-                                   "我好像连不上本地的 Ollama，确认下 Ollama 在跑、模型已拉取？")
+        err = str(err)
+        self.window.status.setText("❌ %s" % err)
+        # 根据错误类型给出可操作的回复提示
+        if "Ollama" in err or "ollama" in err:
+            self.window.append_message(settings.default_pet,
+                                       "我脑子连不上啦～%s" % err)
+        else:
+            self.window.append_message(settings.default_pet,
+                                       "出错了：%s" % err)
+        self.window.set_sending(False)
 
     # ---- TTS ----
     def _current_voice(self):
