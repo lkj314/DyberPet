@@ -259,6 +259,48 @@ class SettingInterface(ScrollArea):
             self.CompanionBubbleCard.setChecked(False)
         self.CompanionBubbleCard.switchButton.checkedChanged.connect(self._CompanionBubbleChanged)
 
+        # Chat (对话) ==============================================================================
+        self.ChatGroup = SettingCardGroup(self.tr('Chat'), self.scrollWidget)
+        self.ChatTtsCard = SwitchSettingCard(
+            FIF.SEND,
+            self.tr("Voice Reply"),
+            self.tr("Pet speaks its replies out loud via edge-tts"),
+            parent=self.ChatGroup
+        )
+        if settings.chat_tts:
+            self.ChatTtsCard.setChecked(True)
+        else:
+            self.ChatTtsCard.setChecked(False)
+        self.ChatTtsCard.switchButton.checkedChanged.connect(self._ChatTtsChanged)
+
+        self.ChatSttCard = SwitchSettingCard(
+            FIF.MICROPHONE,
+            self.tr("Voice Input"),
+            self.tr("Hold the mic button to talk; speech is transcribed to text (offline Vosk)"),
+            parent=self.ChatGroup
+        )
+        if settings.chat_stt:
+            self.ChatSttCard.setChecked(True)
+        else:
+            self.ChatSttCard.setChecked(False)
+        self.ChatSttCard.switchButton.checkedChanged.connect(self._ChatSttChanged)
+
+        self.ChatVoiceCard = Dyber_ComboBoxSettingCard(
+            ["云希(男·活力)", "晓晓(女·温柔)", "云扬(男·专业)", "云健(男·沉稳)", "晓伊(女·清新)"],
+            ["云希(男·活力)", "晓晓(女·温柔)", "云扬(男·专业)", "云健(男·沉稳)", "晓伊(女·清新)"],
+            FIF.ROBOT,
+            self.tr('TTS Voice'),
+            self.tr('Voice used for spoken replies'),
+            parent=self.ChatGroup
+        )
+        self.ChatVoiceCard.comboBox.setCurrentText(settings.chat_voice)
+        self.ChatVoiceCard.comboBox.currentTextChanged.connect(self._ChatVoiceChanged)
+
+        self.ChatGroup.addSettingCard(self.ChatTtsCard)
+        self.ChatGroup.addSettingCard(self.ChatSttCard)
+        self.ChatGroup.addSettingCard(self.ChatVoiceCard)
+        self.expandLayout.addWidget(self.ChatGroup)
+
         # About ==============================================================================
         self.aboutGroup = SettingCardGroup(self.tr('About'), self.scrollWidget)
         update_needed, update_text = self._checkUpdate()
@@ -465,6 +507,18 @@ class SettingInterface(ScrollArea):
 
     def _CompanionBubbleChanged(self, isChecked):
         settings.lol_companion_bubble = bool(isChecked)
+        settings.save_settings()
+
+    def _ChatTtsChanged(self, isChecked):
+        settings.chat_tts = bool(isChecked)
+        settings.save_settings()
+
+    def _ChatSttChanged(self, isChecked):
+        settings.chat_stt = bool(isChecked)
+        settings.save_settings()
+
+    def _ChatVoiceChanged(self, value):
+        settings.chat_voice = value
         settings.save_settings()
 
 

@@ -388,6 +388,7 @@ class PetWidget(QWidget):
     # [LoL 陪玩] 外部触发接口（由 LoLCompanionWorker 跨线程 emit）
     sig_caster_line = Signal(str, name='sig_caster_line')
     sig_companion_react = Signal(str, name='sig_companion_react')
+    sig_open_chat = Signal(name='sig_open_chat')
 
     def __init__(self, parent=None, curr_pet_name=None, pets=(), screens=[]):
         """
@@ -1021,6 +1022,7 @@ class PetWidget(QWidget):
             #Action(FIF.MENU, self.tr('More Options'), triggered=self._show_right_menu),
             Action(QIcon(os.path.join(basedir,'res/icons/dashboard.svg')), self.tr('Dashboard'), triggered=self._show_dashboard),
             Action(QIcon(os.path.join(basedir,'res/icons/SystemPanel.png')), self.tr('System'), triggered=self._show_controlPanel),
+            Action(FIF.CHAT, self.tr('Chat'), triggered=self._open_chat),
         ])
         self.StatMenu.addSeparator()
 
@@ -1046,6 +1048,10 @@ class PetWidget(QWidget):
         """
         # 光标位置弹出菜单
         self.StatMenu.popup(QCursor.pos()-QPoint(0, self.StatMenu.height()-20))
+
+    def _open_chat(self):
+        """打开桌宠对话窗口（由 ChatManager 接管）。"""
+        self.sig_open_chat.emit()
 
     def _add_pet(self, pet_name: str):
         pet_acc = {'name':'pet', 'pet_name':pet_name}

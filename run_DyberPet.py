@@ -16,6 +16,7 @@ from qfluentwidgets import  FluentTranslator, setThemeColor
 from DyberPet.DyberSettings.DyberControlPanel import ControlMainWindow
 from DyberPet.Dashboard.DashboardUI import DashboardMainWindow
 from DyberPet.lol_companion import LoLCompanionWorker
+from DyberPet.pet_chat import ChatManager
 
 try:
     size_factor = 1 #ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100
@@ -70,6 +71,12 @@ class DyberPetApp(QApplication):
         self.companion.companion_react.connect(self.p.sig_companion_react)
         self.companion.start()
         self.aboutToQuit.connect(self._stop_companion)
+
+        # [对话] 聊天窗口 + 语音播报/输入（Ollama 复用 companion 的模型与风格）
+        self.chat = ChatManager()
+        self.p.sig_open_chat.connect(self.chat.open_window)
+        self.chat.sig_reply.connect(self.p.show_speech)
+        self.aboutToQuit.connect(self._stop_chat)
 
         # Notification System
         self.note = DPNote()
@@ -183,6 +190,19 @@ class DyberPetApp(QApplication):
         if comp is not None:
             comp.stop()
             comp.wait(2000)
+
+    def _stop_chat(self):
+        """退出时停止对话相关后台线程。"""
+        chat = getattr(self, 'chat', None)
+        if chat is None:
+            return
+        stt = getattr(chat, '_stt', None)
+        if stt is not None and stt.isRunning():
+            stt.stop()
+            stt.wait(2000)
+        tts = getattr(chat, '_tts', None)
+        if tts is not None and tts.isRunning():
+            tts.wait(2000)
 
 
         

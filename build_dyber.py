@@ -40,6 +40,10 @@ opts = [
     "--collect-submodules", "apscheduler",
     "--collect-submodules", "pynput",
     "--collect-submodules", "tendo",
+    # 对话/语音相关包
+    "--collect-submodules", "edge_tts",
+    "--collect-submodules", "vosk",
+    "--collect-submodules", "pyaudio",
     # 项目包路径
     "--paths", "DyberPet",
 ]
