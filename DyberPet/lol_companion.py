@@ -408,6 +408,17 @@ def sanitize_commentary(text: str) -> str:
 # --------------------------------------------------------------------------- #
 # 解说器（Ollama）
 # --------------------------------------------------------------------------- #
+def list_ollama_models(ollama_base: str = DEFAULT_OLLAMA_BASE) -> List[str]:
+    """列出本机 Ollama 已拉取的模型名（/api/tags），失败返回空列表。"""
+    try:
+        resp = _LOCAL_SESSION.get(f"{ollama_base}/api/tags",
+                                 timeout=5, proxies={"http": None, "https": None})
+        resp.raise_for_status()
+        return [m.get("name", "") for m in resp.json().get("models", []) if m.get("name")]
+    except Exception:  # noqa: BLE001
+        return []
+
+
 class Caster:
     """通过本机 Ollama 产出一句中文解说词。"""
 
@@ -449,15 +460,15 @@ class Caster:
             return "塔没了！冲！"
         return "这波有点意思。"
 
-    def _check_ollama(self) -> str:
+    def _check_ollama(self, model: Optional[str] = None) -> str:
         """检查 Ollama 服务是否可用，返回错误信息或空字符串表示正常。"""
+        wanted = model or self.model or settings.lol_companion_model or DEFAULT_MODEL
         try:
             resp = _LOCAL_SESSION.get(f"{self.ollama_base}/api/tags",
                                       timeout=5, proxies={"http": None, "https": None})
             resp.raise_for_status()
             data = resp.json()
             models = [m.get("name", "") for m in data.get("models", [])]
-            wanted = settings.lol_companion_model or self.model or DEFAULT_MODEL
             if wanted not in models:
                 return f"Ollama 里没找到模型 '{wanted}'，请先运行：ollama pull {wanted}"
             return ""
@@ -469,9 +480,10 @@ class Caster:
             return f"检查 Ollama 状态时出错：{e}"
 
     def _post(self, messages: List[Dict], num_predict: int = 80,
-              raise_on_error: bool = False) -> str:
+              raise_on_error: bool = False, model: Optional[str] = None) -> str:
+        wanted = model or self.model or settings.lol_companion_model or DEFAULT_MODEL
         payload = {
-            "model": settings.lol_companion_model or self.model or DEFAULT_MODEL,
+            "model": wanted,
             "stream": False,
             "keep_alive": "10m",
             "options": {"temperature": 0.8, "num_predict": num_predict},
@@ -481,7 +493,6 @@ class Caster:
             resp = _LOCAL_SESSION.post(f"{self.ollama_base}/api/chat", json=payload,
                                        timeout=30, proxies={"http": None, "https": None})
             if resp.status_code == 404:
-                wanted = settings.lol_companion_model or self.model or DEFAULT_MODEL
                 msg = f"模型 '{wanted}' 不存在，请先运行：ollama pull {wanted}"
                 if raise_on_error:
                     raise RuntimeError(msg)
@@ -592,11 +603,12 @@ class LoLCompanionWorker(QThread):
     companion_react = Signal(str)
 
     def __init__(self, ollama_base: str = DEFAULT_OLLAMA_BASE,
-                 model: str = DEFAULT_MODEL, interval: float = 2.0,
+                 model: Optional[str] = None, interval: float = 2.0,
                  parent=None) -> None:
         super().__init__(parent)
         self.reader = GameDataReader()
-        self.caster = Caster(ollama_base=ollama_base, model=model)
+        self.caster = Caster(ollama_base=ollama_base,
+                             model=model or settings.lol_companion_model)
         self.interval = interval
         self._stop_event = threading.Event()
 

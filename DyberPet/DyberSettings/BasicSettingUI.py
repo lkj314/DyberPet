@@ -6,16 +6,21 @@ from sys import platform
 
 from qfluentwidgets import (SettingCardGroup, SwitchSettingCard, HyperlinkCard,InfoBar,
                             ComboBoxSettingCard, ScrollArea, ExpandLayout, InfoBarPosition,
-                            setThemeColor)
+                            setThemeColor, PushSettingCard)
 
 from qfluentwidgets import FluentIcon as FIF
-from PySide6.QtCore import Qt, Signal, QUrl, QStandardPaths, QLocale
+from PySide6.QtCore import Qt, Signal, QUrl, QStandardPaths, QLocale, QThread
 from PySide6.QtGui import QDesktopServices, QIcon
 from PySide6.QtWidgets import QWidget, QLabel, QApplication
 #from qframelesswindow import FramelessWindow
 
 from .custom_utils import Dyber_RangeSettingCard, Dyber_ComboBoxSettingCard, CustomColorSettingCard
 import DyberPet.settings as settings
+from DyberPet.lol_companion import list_ollama_models
+
+# 推荐模型列表（Ollama 不可达时的兜底选项 + 常见小模型）
+RECOMMENDED_MODELS = ["nanbeige4.1:3b", "qwen2.5:7b", "qwen3.5:3b",
+                      "minicpm5:1b", "gemma4:latest", "llama3.1:8b"]
 
 basedir = settings.BASEDIR
 module_path = os.path.join(basedir, 'DyberPet/DyberSettings/')
@@ -214,8 +219,7 @@ class SettingInterface(ScrollArea):
         self.CompanionEnableCard.switchButton.checkedChanged.connect(self._CompanionEnableChanged)
 
         self.CompanionModelCard = Dyber_ComboBoxSettingCard(
-            ["qwen2.5:7b", "qwen2.5:3b", "gemma4:latest", "llama3.1:8b"],
-            ["qwen2.5:7b", "qwen2.5:3b", "gemma4:latest", "llama3.1:8b"],
+            RECOMMENDED_MODELS, RECOMMENDED_MODELS,
             FIF.ROBOT,
             self.tr('Commentary Model'),
             self.tr('Local Ollama model used to generate real-time commentary'),
@@ -223,6 +227,14 @@ class SettingInterface(ScrollArea):
         )
         self.CompanionModelCard.comboBox.setCurrentText(settings.lol_companion_model)
         self.CompanionModelCard.comboBox.currentTextChanged.connect(self._CompanionModelChanged)
+
+        self.CompanionRefreshCard = PushSettingCard(
+            self.tr('Refresh'), FIF.SYNC,
+            self.tr('Model List'),
+            self.tr('Click to scan locally pulled Ollama models'),
+            parent=self.CompanionGroup
+        )
+        self.CompanionRefreshCard.button.clicked.connect(self._refresh_models_async)
 
         self.CompanionStyleCard = Dyber_ComboBoxSettingCard(
             ["肥牛", "电竞主播", "温柔吐槽", "暴躁老哥"],
@@ -296,10 +308,25 @@ class SettingInterface(ScrollArea):
         self.ChatVoiceCard.comboBox.setCurrentText(settings.chat_voice)
         self.ChatVoiceCard.comboBox.currentTextChanged.connect(self._ChatVoiceChanged)
 
+        self.ChatModelCard = Dyber_ComboBoxSettingCard(
+            RECOMMENDED_MODELS, RECOMMENDED_MODELS,
+            FIF.ROBOT,
+            self.tr('Chat Model'),
+            self.tr('Local Ollama model used for chat replies (can differ from commentary)'),
+            parent=self.ChatGroup
+        )
+        self.ChatModelCard.comboBox.setCurrentText(settings.chat_model)
+        self.ChatModelCard.comboBox.currentTextChanged.connect(self._ChatModelChanged)
+
         self.ChatGroup.addSettingCard(self.ChatTtsCard)
         self.ChatGroup.addSettingCard(self.ChatSttCard)
+        self.ChatGroup.addSettingCard(self.ChatModelCard)
         self.ChatGroup.addSettingCard(self.ChatVoiceCard)
         self.expandLayout.addWidget(self.ChatGroup)
+
+        # 确保当前设置值存在于下拉框（即便不在推荐列表里）
+        self._populate_combo(self.CompanionModelCard, RECOMMENDED_MODELS, settings.lol_companion_model)
+        self._populate_combo(self.ChatModelCard, RECOMMENDED_MODELS, settings.chat_model)
 
         # About ==============================================================================
         self.aboutGroup = SettingCardGroup(self.tr('About'), self.scrollWidget)
@@ -370,6 +397,7 @@ class SettingInterface(ScrollArea):
 
         self.CompanionGroup.addSettingCard(self.CompanionEnableCard)
         self.CompanionGroup.addSettingCard(self.CompanionModelCard)
+        self.CompanionGroup.addSettingCard(self.CompanionRefreshCard)
         self.CompanionGroup.addSettingCard(self.CompanionStyleCard)
         self.CompanionGroup.addSettingCard(self.CompanionReactionCard)
         self.CompanionGroup.addSettingCard(self.CompanionBubbleCard)
@@ -520,6 +548,48 @@ class SettingInterface(ScrollArea):
     def _ChatVoiceChanged(self, value):
         settings.chat_voice = value
         settings.save_settings()
+
+    def _ChatModelChanged(self, value):
+        settings.chat_model = value
+        settings.save_settings()
+
+    # ---- 模型列表动态刷新 ----
+    def _populate_combo(self, card, models, current_value):
+        combo = card.comboBox
+        combo.blockSignals(True)
+        combo.clear()
+        for m in models:
+            combo.addItem(m, userData=m)
+        idx = combo.findText(current_value) if current_value else -1
+        combo.setCurrentIndex(idx if idx >= 0 else 0)
+        combo.blockSignals(False)
+
+    def _refresh_models_async(self):
+        """异步扫描本机已拉取的 Ollama 模型，更新解说/聊天两个下拉框。"""
+        class ModelFetchThread(QThread):
+            result = Signal(list)
+            def run(self):
+                try:
+                    self.result.emit(list_ollama_models())
+                except Exception:  # noqa: BLE001
+                    self.result.emit([])
+        self._model_fetch = ModelFetchThread()
+        self._model_fetch.result.connect(self._on_models_fetched)
+        self._model_fetch.start()
+
+    def _on_models_fetched(self, models):
+        if not models:
+            InfoBar.warning(
+                '', self.tr('No Ollama models found / Ollama not running'),
+                duration=3000, position=InfoBarPosition.BOTTOM, parent=self.window())
+            return
+        # 已安装模型在最前，兜底推荐项排后，去重保序
+        merged = list(dict.fromkeys(models + RECOMMENDED_MODELS))
+        self._populate_combo(self.CompanionModelCard, merged, settings.lol_companion_model)
+        self._populate_combo(self.ChatModelCard, merged, settings.chat_model)
+        InfoBar.success(
+            '', self.tr(f'Found {len(models)} local model(s)'),
+            duration=2000, position=InfoBarPosition.BOTTOM, parent=self.window())
 
 
 def get_latest_version():

@@ -10,12 +10,13 @@ from PySide6 import QtCore
 
 # [LoL 陪玩] 默认开启，可在设置中关闭
 lol_companion_enabled = True
-lol_companion_model = "qwen2.5:7b"
+lol_companion_model = "nanbeige4.1:3b"
 lol_companion_style = "肥牛"
 lol_companion_reactions = True
 lol_companion_bubble = True
 
-# [对话] 桌宠聊天窗口配置（语音播报 / 语音输入 / 音色）
+# [对话] 桌宠聊天窗口配置（语音播报 / 语音输入 / 音色 / 模型）
+chat_model = "nanbeige4.1:3b"
 chat_tts = True
 chat_stt = False
 chat_voice = "云希(男·活力)"
@@ -238,7 +239,7 @@ def init_settings():
            language_code, on_top_hint, default_pet, defaultAct, themeColor, minipet_scale, \
            toaster_on, usertag_dict, auto_lock, bubble_on, \
            lol_companion_enabled, lol_companion_model, lol_companion_style, lol_companion_reactions, lol_companion_bubble, \
-           chat_tts, chat_stt, chat_voice
+           chat_model, chat_tts, chat_stt, chat_voice
 
     # check json file integrity
     try:
@@ -330,13 +331,14 @@ def init_settings():
 
         # [LoL 陪玩] 默认开启
         lol_companion_enabled = data_params.get('lol_companion_enabled', True)
-        lol_companion_model = data_params.get('lol_companion_model', 'qwen2.5:7b')
+        lol_companion_model = data_params.get('lol_companion_model', 'nanbeige4.1:3b')
         lol_companion_style = data_params.get('lol_companion_style', '肥牛')
         lol_companion_reactions = data_params.get('lol_companion_reactions', True)
         lol_companion_bubble = data_params.get('lol_companion_bubble', True)
         #=====================================================
 
         # [对话] 桌宠聊天
+        chat_model = data_params.get('chat_model', 'nanbeige4.1:3b')
         chat_tts = data_params.get('chat_tts', True)
         chat_stt = data_params.get('chat_stt', False)
         chat_voice = data_params.get('chat_voice', '云希(男·活力)')
@@ -363,10 +365,11 @@ def init_settings():
         usertag_dict = {}
         auto_lock = False
         lol_companion_enabled = True
-        lol_companion_model = 'qwen2.5:7b'
+        lol_companion_model = 'nanbeige4.1:3b'
         lol_companion_style = '肥牛'
         lol_companion_reactions = True
         lol_companion_bubble = True
+        chat_model = 'nanbeige4.1:3b'
         chat_tts = True
         chat_stt = False
         chat_voice = '云希(男·活力)'
@@ -378,7 +381,7 @@ def save_settings():
            language_code, on_top_hint, default_pet, defaultAct, themeColor, minipet_scale, \
            toaster_on, usertag_dict, auto_lock, bubble_on, \
            lol_companion_enabled, lol_companion_model, lol_companion_style, lol_companion_reactions, lol_companion_bubble, \
-           chat_tts, chat_stt, chat_voice
+           chat_model, chat_tts, chat_stt, chat_voice
 
     data_js = {'gravity':gravity,
                'set_fall': set_fall,
@@ -396,6 +399,7 @@ def save_settings():
                'lol_companion_style':lol_companion_style,
                'lol_companion_reactions':lol_companion_reactions,
                'lol_companion_bubble':lol_companion_bubble,
+               'chat_model':chat_model,
                'chat_tts':chat_tts,
                'chat_stt':chat_stt,
                'chat_voice':chat_voice,

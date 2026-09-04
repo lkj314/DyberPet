@@ -273,7 +273,7 @@ class ChatManager(QObject):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.caster = Caster()
+        self.caster = Caster(model=settings.chat_model or settings.lol_companion_model)
         self.window = PetChatWindow(self)
         self.history = []  # (user, assistant)
         self._chat_thread = None
