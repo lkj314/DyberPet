@@ -19,8 +19,10 @@ import DyberPet.settings as settings
 from DyberPet.lol_companion import list_ollama_models
 
 # 推荐模型列表（Ollama 不可达时的兜底选项 + 常见小模型）
-RECOMMENDED_MODELS = ["nanbeige4.1:3b", "qwen2.5:7b", "qwen3.5:3b",
-                      "minicpm5:1b", "gemma4:latest", "llama3.1:8b"]
+# 仅保留确定存在 / 已在本机验证过的模型标签，避免给不存在的 tag 当推荐
+# 仅放 Ollama 官方库/本机可确认存在的模型；nanbeige4.1:3b 是思考型模型，
+# 用作实时解说/对话会空回复，仅作可选项保留，默认不推荐。
+RECOMMENDED_MODELS = ["qwen2.5:3b", "qwen3:1.7b", "nanbeige4.1:3b", "qwen2.5vl:3b"]
 
 basedir = settings.BASEDIR
 module_path = os.path.join(basedir, 'DyberPet/DyberSettings/')
