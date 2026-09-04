@@ -1,6 +1,6 @@
 # DyberPet 开发环境依赖定版
 # ---------------------------------------------------------------
-# 本文件锁定的是「当前在 U:\live2d\DyberPet\.venv (Python 3.12.10) 已验证可导入/启动」的组合。
+# 本文件锁定的是「当前在 U:\DyberPet\.venv (Python 3.12.10) 已验证可导入/启动」的组合。
 #
 # ⚠️ 与原版 README 的偏离说明：
 #    README 锁定的是 PySide6==6.5.2 + PySide6-Fluent-Widgets==1.5.4，且只支持 Python 3.9~3.11。
