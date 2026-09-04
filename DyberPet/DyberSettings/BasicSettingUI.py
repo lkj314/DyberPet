@@ -300,6 +300,18 @@ class SettingInterface(ScrollArea):
             self.ChatSttCard.setChecked(False)
         self.ChatSttCard.switchButton.checkedChanged.connect(self._ChatSttChanged)
 
+        self.ChatSttAlwaysCard = SwitchSettingCard(
+            FIF.MICROPHONE,
+            self.tr("Always Listening"),
+            self.tr("Keep mic on and auto-reply when you speak (requires Voice Input)"),
+            parent=self.ChatGroup
+        )
+        if settings.chat_stt_always_listen:
+            self.ChatSttAlwaysCard.setChecked(True)
+        else:
+            self.ChatSttAlwaysCard.setChecked(False)
+        self.ChatSttAlwaysCard.switchButton.checkedChanged.connect(self._ChatSttAlwaysChanged)
+
         self.ChatVoiceCard = Dyber_ComboBoxSettingCard(
             ["云希(男·活力)", "晓晓(女·温柔)", "云扬(男·专业)", "云健(男·沉稳)", "晓伊(女·清新)"],
             ["云希(男·活力)", "晓晓(女·温柔)", "云扬(男·专业)", "云健(男·沉稳)", "晓伊(女·清新)"],
@@ -546,6 +558,33 @@ class SettingInterface(ScrollArea):
 
     def _ChatSttChanged(self, isChecked):
         settings.chat_stt = bool(isChecked)
+        # 关掉语音输入时，始终聆听没有意义，一并关闭
+        if not isChecked and settings.chat_stt_always_listen:
+            settings.chat_stt_always_listen = False
+            self.ChatSttAlwaysCard.switchButton.blockSignals(True)
+            self.ChatSttAlwaysCard.setChecked(False)
+            self.ChatSttAlwaysCard.switchButton.blockSignals(False)
+        settings.save_settings()
+
+    def _ChatSttAlwaysChanged(self, isChecked):
+        if isChecked and not settings.chat_stt:
+            # 始终聆听依赖语音输入；未开启时给出提示并回滚
+            InfoBar.warning(
+                title=self.tr('需要开启语音输入'),
+                content=self.tr('「始终聆听」需要先开启「Voice Input」'),
+                orient=Qt.Horizontal,
+                isClosable=True,
+                position=InfoBarPosition.TOP,
+                duration=3000,
+                parent=self
+            )
+            self.ChatSttAlwaysCard.switchButton.blockSignals(True)
+            self.ChatSttAlwaysCard.setChecked(False)
+            self.ChatSttAlwaysCard.switchButton.blockSignals(False)
+            settings.chat_stt_always_listen = False
+            settings.save_settings()
+            return
+        settings.chat_stt_always_listen = bool(isChecked)
         settings.save_settings()
 
     def _ChatVoiceChanged(self, value):

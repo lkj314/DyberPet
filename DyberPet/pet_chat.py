@@ -157,12 +157,15 @@ class TTSWorker(QThread):
 # Worker：STT 按住说话（录音 -> vosk 识别 -> 文本）
 # --------------------------------------------------------------------------- #
 class STTWorker(QThread):
-    text_ready = Signal(str)
+    text_ready = Signal(str)        # 一次性（按住说话）的最终结果
+    segment_ready = Signal(str)     # 始终聆听模式下的一句完整结果
+    partial_ready = Signal(str)     # 实时部分结果（用于状态栏回显）
     error = Signal(str)
 
-    def __init__(self, model_path: str):
+    def __init__(self, model_path: str, continuous: bool = False):
         super().__init__()
         self.model_path = model_path
+        self.continuous = continuous
         self._run = True
 
     def stop(self):
@@ -176,15 +179,32 @@ class STTWorker(QThread):
             stream = p.open(format=pyaudio.paInt16, channels=1, rate=16000,
                             input=True, frames_per_buffer=8000)
             stream.start_stream()
+            last_partial = ""
             while self._run:
                 data = stream.read(4000, exception_on_overflow=False)
-                rec.AcceptWaveform(data)
-            res = json.loads(rec.FinalResult())
-            text = res.get("text", "").strip()
+                try:
+                    partial = json.loads(rec.PartialResult()).get("partial", "").strip()
+                except Exception:  # noqa: BLE001
+                    partial = ""
+                if partial and partial != last_partial:
+                    last_partial = partial
+                    self.partial_ready.emit(partial)
+                if self.continuous:
+                    # 端点检测：一句话说完（遇到静音）AcceptWaveform 返回 True
+                    if rec.AcceptWaveform(data):
+                        res = json.loads(rec.Result())
+                        text = res.get("text", "").strip()
+                        if text:
+                            self.segment_ready.emit(text)
+                else:
+                    rec.AcceptWaveform(data)
+            if not self.continuous:
+                res = json.loads(rec.FinalResult())
+                text = res.get("text", "").strip()
+                self.text_ready.emit(text)
             stream.stop_stream()
             stream.close()
             p.terminate()
-            self.text_ready.emit(text)
         except Exception as e:  # noqa: BLE001
             logger.exception("stt failed")
             self.error.emit(str(e))
@@ -216,6 +236,10 @@ class PetChatWindow(QWidget):
         self.voice_btn.pressed.connect(self._on_voice_press)
         self.voice_btn.released.connect(self._on_voice_release)
 
+        self.listen_btn = QPushButton("🎧 始终聆听")
+        self.listen_btn.setCheckable(True)
+        self.listen_btn.toggled.connect(self._on_listen_toggle)
+
         self.status = QLabel("")
         self.status.setStyleSheet("color: #888;")
 
@@ -223,6 +247,7 @@ class PetChatWindow(QWidget):
         input_row.addWidget(self.input, 3)
         input_row.addWidget(self.send_btn, 1)
         input_row.addWidget(self.voice_btn, 1)
+        input_row.addWidget(self.listen_btn, 1)
 
         layout = QVBoxLayout(self)
         layout.addWidget(self.history, 1)
@@ -266,6 +291,32 @@ class PetChatWindow(QWidget):
     def _on_voice_release(self):
         self.manager.stop_stt()
 
+    def _on_listen_toggle(self, checked):
+        if checked:
+            if not settings.chat_stt:
+                self.status.setText("请先在设置里开启「语音输入(Voice Input)」")
+                self.set_always_listen(False)
+                return
+            self.manager.start_always_listen()
+            settings.chat_stt_always_listen = True
+            self._save_listen_pref()
+        else:
+            self.manager.stop_always_listen()
+            settings.chat_stt_always_listen = False
+            self._save_listen_pref()
+
+    def _save_listen_pref(self):
+        try:
+            settings.save_settings()
+        except Exception:  # noqa: BLE001
+            pass
+
+    def set_always_listen(self, on: bool):
+        self.listen_btn.blockSignals(True)
+        self.listen_btn.setChecked(on)
+        self.listen_btn.setText("🎧 聆听中" if on else "🎧 始终聆听")
+        self.listen_btn.blockSignals(False)
+
 
 # --------------------------------------------------------------------------- #
 # 管理器：串起窗口 / Ollama / TTS / STT，并把回复投给宠物气泡
@@ -283,6 +334,12 @@ class ChatManager(QObject):
         self._stt = None
         self._tts = None
 
+        # 始终聆听（continuous STT）状态
+        self._always_listen = False
+        self._stt_always = None
+        self._listen_muted = False   # TTS 播报期间为 True，忽略麦克风输入（防回声）
+        self._tts_playing = False
+
         self.player = None
         self.audio_out = None
         if HAVE_QTMEDIA:
@@ -290,6 +347,7 @@ class ChatManager(QObject):
                 self.player = QMediaPlayer()
                 self.audio_out = QAudioOutput()
                 self.player.setAudioOutput(self.audio_out)
+                self.player.playbackStateChanged.connect(self._on_playback_state)
             except Exception:  # noqa: BLE001
                 self.player = None
 
@@ -298,6 +356,9 @@ class ChatManager(QObject):
         self.window.show()
         self.window.raise_()
         self.window.activateWindow()
+        # 打开窗口时若已开启「始终聆听」偏好，自动进入聆听
+        if settings.chat_stt and settings.chat_stt_always_listen and HAVE_STT:
+            self.start_always_listen()
         # 打开窗口时异步检查 Ollama 状态，给用户即时反馈
         self._check_ollama_async()
 
@@ -417,3 +478,86 @@ class ChatManager(QObject):
             self.window._on_send()
         else:
             self.window.status.setText("没听清，再试一次")
+
+    # ---- 始终聆听（continuous STT） ----
+    def toggle_always_listen(self):
+        if self._always_listen:
+            self.stop_always_listen()
+        else:
+            self.start_always_listen()
+
+    def start_always_listen(self):
+        if not HAVE_STT:
+            self.window.status.setText("未安装 vosk/pyaudio，无法语音输入")
+            self.window.set_always_listen(False)
+            return
+        if self._always_listen:
+            return
+        try:
+            model_path = _ensure_vosk_model()
+        except Exception as e:  # noqa: BLE001
+            self.window.status.setText(
+                "语音模型下载失败（可能网络受限）。请手动下载 %s 解压到 %s"
+                % (VOSK_MODEL_URL, settings.configdir))
+            logger.warning("vosk model fetch failed: %s", e)
+            self.window.set_always_listen(False)
+            return
+        self._always_listen = True
+        self._stt_always = STTWorker(model_path, continuous=True)
+        self._stt_always.segment_ready.connect(self._on_stt_segment)
+        self._stt_always.partial_ready.connect(self._on_stt_partial)
+        self._stt_always.error.connect(self._on_stt_error)
+        self._stt_always.start()
+        self.window.set_always_listen(True)
+        if self._tts_playing:
+            self._listen_muted = True
+            self.window.status.setText("🎧 聆听暂停（播报中）")
+        else:
+            self.window.status.setText("🎧 始终聆听中…")
+
+    def stop_always_listen(self):
+        self._always_listen = False
+        self._listen_muted = False
+        if self._stt_always is not None:
+            self._stt_always.stop()
+            self._stt_always = None
+        self.window.set_always_listen(False)
+        self.window.status.setText("")
+
+    def _on_stt_segment(self, text):
+        # 防回声：TTS 播报期间静音，忽略宠物自己的声音
+        if self._listen_muted:
+            return
+        text = (text or "").strip()
+        # 过滤环境噪音误触（太短的句子基本是误识别）
+        if len(text) < 2:
+            return
+        # 避免与进行中的对话重叠：正在等回复时忽略这一句
+        if self._chat_thread is not None and self._chat_thread.isRunning():
+            return
+        self.window.input.setText(text)
+        self.window._on_send()
+
+    def _on_stt_partial(self, text):
+        if self._listen_muted or not self._always_listen:
+            return
+        self.window.status.setText("🎧 聆听中… %s" % (text or "").strip())
+
+    def _on_stt_error(self, err):
+        self.window.status.setText("语音识别错误：%s" % err)
+        self.stop_always_listen()
+
+    def _on_playback_state(self, state):
+        if self.player is None:
+            return
+        from PySide6.QtMultimedia import QMediaPlayer
+        self._tts_playing = (state == QMediaPlayer.PlayingState)
+        if not self._always_listen:
+            return
+        if self._tts_playing:
+            # 宠物正在说话，静音麦克风防止它听到自己
+            self._listen_muted = True
+            self.window.status.setText("🎧 聆听暂停（播报中）")
+        else:
+            self._listen_muted = False
+            self.window.status.setText("🎧 始终聆听中…")

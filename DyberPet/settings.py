@@ -19,6 +19,7 @@ lol_companion_bubble = True
 chat_model = "gemma3:4b"
 chat_tts = True
 chat_stt = False
+chat_stt_always_listen = False
 chat_voice = "云希(男·活力)"
 
 if platform == 'win32':
@@ -239,7 +240,7 @@ def init_settings():
            language_code, on_top_hint, default_pet, defaultAct, themeColor, minipet_scale, \
            toaster_on, usertag_dict, auto_lock, bubble_on, \
            lol_companion_enabled, lol_companion_model, lol_companion_style, lol_companion_reactions, lol_companion_bubble, \
-           chat_model, chat_tts, chat_stt, chat_voice
+           chat_model, chat_tts, chat_stt, chat_stt_always_listen, chat_voice
 
     # check json file integrity
     try:
@@ -388,7 +389,7 @@ def save_settings():
            language_code, on_top_hint, default_pet, defaultAct, themeColor, minipet_scale, \
            toaster_on, usertag_dict, auto_lock, bubble_on, \
            lol_companion_enabled, lol_companion_model, lol_companion_style, lol_companion_reactions, lol_companion_bubble, \
-           chat_model, chat_tts, chat_stt, chat_voice
+           chat_model, chat_tts, chat_stt, chat_stt_always_listen, chat_voice
 
     data_js = {'gravity':gravity,
                'set_fall': set_fall,
@@ -409,6 +410,7 @@ def save_settings():
                'chat_model':chat_model,
                'chat_tts':chat_tts,
                'chat_stt':chat_stt,
+               'chat_stt_always_listen':chat_stt_always_listen,
                'chat_voice':chat_voice,
                'default_pet':default_pet,
                'defaultAct':defaultAct,
