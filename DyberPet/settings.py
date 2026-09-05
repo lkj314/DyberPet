@@ -8,12 +8,8 @@ from PySide6.QtGui import QImage, QPixmap
 from DyberPet.conf import PetData, TaskData, ActData, ItemData
 from PySide6 import QtCore
 
-# [LoL 陪玩] 默认开启，可在设置中关闭
-lol_companion_enabled = True
-lol_companion_model = "gemma3:4b"
-lol_companion_style = "肥牛"
-lol_companion_reactions = True
-lol_companion_bubble = True
+# [插件] 各插件设置子字典，随 settings.json 落盘；结构由 plugin.json 的 settings_schema 定义
+plugins_settings = {}
 
 # [对话] 桌宠聊天窗口配置（语音播报 / 语音输入 / 音色 / 模型）
 chat_model = "gemma3:4b"
@@ -167,6 +163,12 @@ def init():
     global volume
     volume = 0.4
 
+    # day/night mode ===================================================
+    global day_night_on, day_start, night_start
+    day_night_on = False
+    day_start = '08:00'
+    night_start = '23:00'
+
     # pet name =========================================================
     global petname
     petname = ''
@@ -189,7 +191,8 @@ def init():
     init_settings()
     global default_pet
     if default_pet not in pets:
-        default_pet = pets[0]
+        # 默认角色优先韩立（修仙放置系统主形象）
+        default_pet = '韩立' if '韩立' in pets else pets[0]
     else:
         pets.remove(default_pet)
         pets.sort()
@@ -239,8 +242,9 @@ def init_settings():
     global gravity, fixdragspeedx, fixdragspeedy, tunable_scale, scale_dict, volume, \
            language_code, on_top_hint, default_pet, defaultAct, themeColor, minipet_scale, \
            toaster_on, usertag_dict, auto_lock, bubble_on, \
-           lol_companion_enabled, lol_companion_model, lol_companion_style, lol_companion_reactions, lol_companion_bubble, \
-           chat_model, chat_tts, chat_stt, chat_stt_always_listen, chat_voice
+           plugins_settings, \
+           chat_model, chat_tts, chat_stt, chat_stt_always_listen, chat_voice, \
+           day_night_on, day_start, night_start
 
     # check json file integrity
     try:
@@ -261,7 +265,8 @@ def init_settings():
         volume = data_params['volume']
         language_code = data_params.get('language_code', QtCore.QLocale().name())
         on_top_hint = data_params.get('on_top_hint', True)
-        default_pet = data_params.get('default_pet', pets[0])
+        default_pet = data_params.get('default_pet',
+                                      '韩立' if '韩立' in pets else pets[0])
         defaultAct = data_params.get('defaultAct', {})
         themeColor = data_params.get('themeColor', None)
 
@@ -273,6 +278,13 @@ def init_settings():
 
         for pet in pets:
             defaultAct[pet] = defaultAct.get(pet, None)
+        #=====================================================
+
+        # day/night mode =====================================
+        global day_night_on, day_start, night_start
+        day_night_on = bool(data_params.get('day_night_on', False))
+        day_start = data_params.get('day_start', '08:00')
+        night_start = data_params.get('night_start', '23:00')
         #=====================================================
 
         # update for app <= v0.2.2 ===========================
@@ -330,12 +342,17 @@ def init_settings():
         bubble_on = data_params.get('bubble_on', True)
         #=====================================================
 
-        # [LoL 陪玩] 默认开启
-        lol_companion_enabled = data_params.get('lol_companion_enabled', True)
-        lol_companion_model = data_params.get('lol_companion_model', 'gemma3:4b')
-        lol_companion_style = data_params.get('lol_companion_style', '肥牛')
-        lol_companion_reactions = data_params.get('lol_companion_reactions', True)
-        lol_companion_bubble = data_params.get('lol_companion_bubble', True)
+        # [插件] 读取各插件设置；首次启动把旧顶层 lol_companion_* 迁移进 plugins_settings
+        plugins_settings = data_params.get('plugins_settings', {})
+        if not plugins_settings.get('lol_companion') and any(
+                k.startswith('lol_companion_') for k in data_params):
+            plugins_settings['lol_companion'] = {
+                'enabled':   data_params.get('lol_companion_enabled', True),
+                'model':     data_params.get('lol_companion_model', 'gemma3:4b'),
+                'style':     data_params.get('lol_companion_style', '肥牛'),
+                'reactions': data_params.get('lol_companion_reactions', True),
+                'bubble':    data_params.get('lol_companion_bubble', True),
+            }
         #=====================================================
 
         # [对话] 桌宠聊天
@@ -345,10 +362,9 @@ def init_settings():
         chat_voice = data_params.get('chat_voice', '云希(男·活力)')
         #=====================================================
 
-        # 迁移：已确认 nanbeige4.1:3b 为思考型模型，实时解说/对话会空回复或泄露 prompt，
-        # 如果用户之前保存过这个默认值，自动切到可用的 gemma3:4b。
-        if lol_companion_model == 'nanbeige4.1:3b':
-            lol_companion_model = 'gemma3:4b'
+        # 迁移：nanbeige4.1:3b 思考型模型（解说/对话会空回复或泄露 prompt），自动切到 gemma3:4b。
+        if plugins_settings.get('lol_companion', {}).get('model') == 'nanbeige4.1:3b':
+            plugins_settings['lol_companion']['model'] = 'gemma3:4b'
         if chat_model == 'nanbeige4.1:3b':
             chat_model = 'gemma3:4b'
 
@@ -358,7 +374,7 @@ def init_settings():
         volume = 0.5
         language_code = QtCore.QLocale().name()
         on_top_hint = True
-        default_pet = pets[0]
+        default_pet = '韩立' if '韩立' in pets else pets[0]
         defaultAct = {}
         themeColor = None
         for pet in pets:
@@ -372,11 +388,7 @@ def init_settings():
         bubble_on = True
         usertag_dict = {}
         auto_lock = False
-        lol_companion_enabled = True
-        lol_companion_model = 'gemma3:4b'
-        lol_companion_style = '肥牛'
-        lol_companion_reactions = True
-        lol_companion_bubble = True
+        plugins_settings = {'lol_companion': {'enabled': True, 'model': 'gemma3:4b', 'style': '肥牛', 'reactions': True, 'bubble': True}}
         chat_model = 'gemma3:4b'
         chat_tts = True
         chat_stt = False
@@ -388,8 +400,9 @@ def save_settings():
     global file_path, set_fall, gravity, fixdragspeedx, fixdragspeedy, scale_dict, volume, \
            language_code, on_top_hint, default_pet, defaultAct, themeColor, minipet_scale, \
            toaster_on, usertag_dict, auto_lock, bubble_on, \
-           lol_companion_enabled, lol_companion_model, lol_companion_style, lol_companion_reactions, lol_companion_bubble, \
-           chat_model, chat_tts, chat_stt, chat_stt_always_listen, chat_voice
+           plugins_settings, \
+           chat_model, chat_tts, chat_stt, chat_stt_always_listen, chat_voice, \
+           day_night_on, day_start, night_start
 
     data_js = {'gravity':gravity,
                'set_fall': set_fall,
@@ -402,11 +415,7 @@ def save_settings():
                'on_top_hint':on_top_hint,
                'toaster_on':toaster_on,
                'bubble_on':bubble_on,
-               'lol_companion_enabled':lol_companion_enabled,
-               'lol_companion_model':lol_companion_model,
-               'lol_companion_style':lol_companion_style,
-               'lol_companion_reactions':lol_companion_reactions,
-               'lol_companion_bubble':lol_companion_bubble,
+               'plugins_settings':plugins_settings,
                'chat_model':chat_model,
                'chat_tts':chat_tts,
                'chat_stt':chat_stt,
@@ -416,7 +425,10 @@ def save_settings():
                'defaultAct':defaultAct,
                'language_code':language_code,
                'themeColor':themeColor,
-               'auto_lock':auto_lock
+               'auto_lock':auto_lock,
+               'day_night_on':day_night_on,
+               'day_start':day_start,
+               'night_start':night_start
                }
 
     with open(file_path, 'w', encoding='utf-8') as f:

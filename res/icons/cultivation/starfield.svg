@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <radialGradient id="night" cx="50%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#24375E"/>
+      <stop offset="100%" stop-color="#16223C"/>
+    </radialGradient>
+  </defs>
+  <circle cx="128" cy="128" r="120" fill="url(#night)" opacity="0.6"/>
+  <g fill="#EAF2F2">
+    <circle cx="70" cy="64" r="2.4"><animate attributeName="opacity" values="0.15;1;0.15" dur="2.6s" begin="0s" repeatCount="indefinite"/></circle>
+    <circle cx="186" cy="80" r="1.8"><animate attributeName="opacity" values="0.15;0.9;0.15" dur="3.2s" begin="0.5s" repeatCount="indefinite"/></circle>
+    <circle cx="150" cy="150" r="2.6"><animate attributeName="opacity" values="0.15;1;0.15" dur="2.9s" begin="1s" repeatCount="indefinite"/></circle>
+    <circle cx="96" cy="170" r="1.6"><animate attributeName="opacity" values="0.15;0.85;0.15" dur="2.3s" begin="1.6s" repeatCount="indefinite"/></circle>
+    <circle cx="200" cy="170" r="2"><animate attributeName="opacity" values="0.15;0.95;0.15" dur="3.5s" begin="0.3s" repeatCount="indefinite"/></circle>
+    <circle cx="60" cy="120" r="1.8"><animate attributeName="opacity" values="0.15;0.9;0.15" dur="2.7s" begin="2s" repeatCount="indefinite"/></circle>
+  </g>
+  <path d="M30 150 Q80 120 130 150 T230 150" stroke="#3A527E" stroke-width="6" fill="none" stroke-linecap="round" opacity="0.5">
+    <animateTransform attributeName="transform" type="translate" values="0 0; -40 0; 0 0" dur="12s" repeatCount="indefinite"/>
+  </path>
+  <path d="M40 190 Q100 165 160 190 T260 190" stroke="#2C4068" stroke-width="5" fill="none" stroke-linecap="round" opacity="0.4">
+    <animateTransform attributeName="transform" type="translate" values="0 0; 50 0; 0 0" dur="16s" repeatCount="indefinite"/>
+  </path>
+</svg>

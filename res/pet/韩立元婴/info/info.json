@@ -1,0 +1,20 @@
+{
+  "coverImages": ["c1.png"],
+  "pfp": "pfp.png",
+  "petName": "韩立元婴",
+  "intro": "《凡人修仙传》主角韩立的元婴形态，化作一只安静漂浮的迷你附属宠物，陪伴本体修炼、读书与日常行动。",
+  "tages": {
+    "凡人修仙传": "#C5E0B4",
+    "韩立": "#BDD7EE",
+    "附属宠物": "#FFE699"
+  },
+  "author": {
+    "name": "哦哟喔喔",
+    "pfp": "oyoh.png",
+    "frameColor": "#FFFFFF",
+    "links": {
+      "BiliBili": "39307302"
+    },
+    "infos": "呆啵宠物 Bug 唯一指定背锅人"
+  }
+}

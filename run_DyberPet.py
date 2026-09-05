@@ -15,7 +15,7 @@ from PySide6.QtCore import Qt, QLocale, QTimer, QDateTime, QDate, Signal, QTime
 from qfluentwidgets import  FluentTranslator, setThemeColor
 from DyberPet.DyberSettings.DyberControlPanel import ControlMainWindow
 from DyberPet.Dashboard.DashboardUI import DashboardMainWindow
-from DyberPet.lol_companion import LoLCompanionWorker
+# [插件] LoL 陪玩已迁移为插件，由 PluginManager 加载
 from DyberPet.pet_chat import ChatManager
 
 try:
@@ -64,13 +64,13 @@ class DyberPetApp(QApplication):
         # Pet Object
         self.p = PetWidget(screens=screens)
 
-        # [LoL 陪玩] 实时解说 + 情绪反应（默认开启，可在设置关闭）
-        # 线程始终启动：设置关闭时内部空转，开启后可即时响应
-        self.companion = LoLCompanionWorker()
-        self.companion.caster_line.connect(self.p.sig_caster_line)
-        self.companion.companion_react.connect(self.p.sig_companion_react)
-        self.companion.start()
-        self.aboutToQuit.connect(self._stop_companion)
+        # [插件系统] 发现并启动已启用的插件（LoL 陪玩作为首个插件被加载）
+        from DyberPet.plugin_system.manager import PluginManager
+        self.plugin_manager = PluginManager(pet_widget=self.p, app=self)
+        self.plugin_manager.discover()
+        self.plugin_manager.start_enabled()
+        settings.plugin_manager = self.plugin_manager
+        self.aboutToQuit.connect(self.plugin_manager.stop_all)
 
         # [对话] 聊天窗口 + 语音播报/输入（Ollama 复用 companion 的模型与风格）
         self.chat = ChatManager()
@@ -122,6 +122,8 @@ class DyberPetApp(QApplication):
 
         self.conp.charCardInterface.change_pet.connect(self.p._change_pet)
         self.p.show_controlPanel.connect(self.conp.show_window)
+        self.p.show_culti_page.connect(self.board.show_cultivation)
+        self.p.show_adventure_page.connect(self.board.show_adventure)
 
         self.conp.gamesaveInterface.refresh_pet.connect(self.p.refresh_pet)
 
@@ -184,12 +186,7 @@ class DyberPetApp(QApplication):
             self.date_changed.emit(new_date)
         self.set_midnight_timer()  # Reset the timer for the next midnight
 
-    def _stop_companion(self):
-        """退出时停止 LoL 陪玩后台线程。"""
-        comp = getattr(self, 'companion', None)
-        if comp is not None:
-            comp.stop()
-            comp.wait(2000)
+    # 插件退出清理由 self.aboutToQuit.connect(self.plugin_manager.stop_all) 统一处理
 
     def _stop_chat(self):
         """退出时停止对话相关后台线程。"""

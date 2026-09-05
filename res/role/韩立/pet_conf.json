@@ -1,0 +1,91 @@
+{
+  "width": 256,
+  "height": 256,
+  "scale": 1.0,
+  
+  "refresh": 5,
+  "interact_speed":0.02,
+
+  "default": "default",
+  "up": "default",
+  "down": "default",
+  "left": "walk",
+  "right": "walk_right",
+  "drag": "drag",
+  "fall": "fall",
+  "patpat": "patpat",
+  "focus": "meditate",
+  "on_floor": "onfloor",
+  
+  "random_act": [
+    {"name":"站立", "act_list":["default"], "act_prob":1.0, "act_type":[2,0]},
+    {"name":"点头示意", "act_list":["patpat"], "act_prob":1.0, "act_type":[2,0]},
+    {"name":"行走", "act_list":["walk", "walk_right","default"], "act_prob":1.0, "act_type":[2,0]},
+    {"name":"奔跑", "act_list":["run", "run_right","default"], "act_prob":1.0, "act_type":[2,0]},
+    {"name":"罗烟步", "act_list":["luoyanbu", "luoyanbu_right","default"], "act_prob":1.0, "act_type":[2,0]},
+    {"name":"御剑飞行", "act_list":["sword_fly", "sword_fly_right", "onfloor", "default"], "act_prob":1.0, "act_type":[2,0]},
+    {"name":"打坐", "act_list":["meditate"], "act_prob":1.0, "act_type":[2,0]},
+    {"name":"乾蓝冰焰", "act_list":["qianlanbingyan_start", "qianlanbingyan", "qianlanbingyan_end"], "act_prob":1.0, "act_type":[2,0]},
+    {"name":"大衍决", "act_list":["dayanjue_start", "dayanjue", "dayanjue_end"], "act_prob":1.0, "act_type":[2,0]},
+    {"name":"阅读古籍", "act_list":["read_start", "read", "read_end"], "act_prob":1.0, "act_type":[2,0]},
+    {"name":"feed_1", "act_list":["eat"], "act_prob":0, "act_type":[0,10000]},
+    {"name":"feed_2", "act_list":["eat"], "act_prob":0, "act_type":[0,10000]},
+    {"name":"feed_3", "act_list":["eat"], "act_prob":0, "act_type":[0,10000]},
+    {"name":"check_item", "act_list":["checkitem_start","checkitem","checkitem_end"], "act_prob":0, "act_type":[0,10000], "item_size":[32,32], "item_anchor":[-75,-180]},
+    {"name":"onfloor", "act_list":["onfloor"], "act_prob":0, "act_type":[0,10000]}
+  ],
+
+  "accessory_act":[
+    {"name":"照料灵草", "act_list":["tend_spirit_herb"], "acc_list":["spirit_herb_sway","spirit_herb_growth"], "act_type":[2,0],
+      "follow_mouse": false, "above_main":true, "anchor":[-178,-236]},
+    {"name":"炼丹", "act_list":["alchemy"], "acc_list":["alchemy_furnace"], "act_type":[2,0],
+      "follow_mouse": false, "above_main":false, "anchor":[-256,-236]},
+    {"name":"巨剑术", "act_list":["qiajue_start", "qiajue", "qiajue_end"], "acc_list":["giant_sword"], "act_type":[2,0],
+      "follow_mouse": false, "above_main":true, "anchor":[-500,-447]},
+    {"name":"剑影分光", "act_list":["qiajue_start", "qiajue", "qiajue_end"], "acc_list":["sword_shadow_split"], "act_type":[2,0],
+      "follow_mouse": false, "above_main":true, "anchor":[-128,-256]},
+    {"name":"大庚剑阵", "act_list":["qiajue_start", "qiajue", "qiajue_end"], "acc_list":["dageng_sword_array","dageng_sword_array","dageng_sword_array"], "act_type":[2,0],
+      "follow_mouse": false, "above_main":false, "anchor":[-256,-456]},
+    {"name": "青竹蜂云剑", "act_list": ["qiajue_start", "qiajue", "qiajue_end"], "acc_list": ["qingzhu_fengyun_sword"],
+      "act_type": [2, 3],
+      "act_prob":0.0,
+      "acc_type": "fly_cursor",
+      "sword_count": 36,
+      "sword_batch": 1,
+      "batch_interval": 160,
+      "sword_size": [128, 128],
+      "sword_speed": 20,
+      "arrive_dist": 24,
+      "spread": 40,
+      "base_orientation": "right",
+      "fade": 200
+    },
+    {"name": "风雷翅", "act_list": [], "acc_list": ["fengleichi"],
+      "anchor": [-250,-278],
+      "act_type": [0, 10000],
+      "act_prob":0.0,
+      "acc_type": "equip",
+      "follow_main": true,
+      "follow_lock": true,
+      "timeout": false,
+      "unique": true,
+      "closable": true,
+      "above_main": false
+    }
+  ],
+
+  "item_favorite": {
+  },
+  "item_dislike": {
+  },
+
+  "prompt": "你是《凡人修仙传》中的韩立，沉稳谨慎、低调务实，习惯先分析风险，再给出可靠建议。语气平和克制，不夸张、不说教，也不过分热情。如果用户填写了昵称，优先使用昵称；如果没有，则称呼用户为“道友”，但不必每句话都带称呼。说话应简洁自然，以现代中文为主，可偶尔使用“稳住心神”“不可操之过急”“此事还需从长计议”等修仙表达，但不要满口古文、频繁提及修炼，也不要使用卖萌语气、网络热梗或大量感叹号。用户焦虑时，可以说“先稳住心神，我们将事情一件件理清。”用户成功时，可以说“做得不错，能稳步走到这里，已是不小的收获。”用户失败时，可以说“一次失利说明不了什么，先找出问题所在。”作为桌面宠物助手，你要提供安静可靠的陪伴。用户疲惫时提醒休息，失败时帮助分析原因，焦虑时先安抚再拆解问题。你的核心气质是：谨慎但不胆怯，冷静但不冷漠，话不多，但所说的话应当有用。",
+
+  "coin_config":{
+    "name":{
+      "zh_CN":"灵石",
+      "en_US":"Spirit Stone"
+    },
+    "image": "info/lingshi_64.png"
+  }
+}

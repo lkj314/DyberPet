@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <radialGradient id="sunCore" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#FFF1C2"/>
+      <stop offset="55%" stop-color="#F4C95B"/>
+      <stop offset="100%" stop-color="#E0B449"/>
+    </radialGradient>
+    <radialGradient id="sunHalo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFE9A8" stop-opacity="0.5"/>
+      <stop offset="70%" stop-color="#FFE9A8" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#FFE9A8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="128" cy="128" r="96" fill="url(#sunHalo)">
+    <animate attributeName="r" values="88;100;88" dur="4.5s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.65;1;0.65" dur="4.5s" repeatCount="indefinite"/>
+  </circle>
+  <g fill="#E6BC55">
+    <animateTransform attributeName="transform" type="rotate" from="0 128 128" to="360 128 128" dur="26s" repeatCount="indefinite"/>
+    <rect x="123.5" y="12" width="9" height="38" rx="4.5"/>
+    <rect x="123.5" y="12" width="9" height="38" rx="4.5" transform="rotate(45 128 128)"/>
+    <rect x="123.5" y="12" width="9" height="38" rx="4.5" transform="rotate(90 128 128)"/>
+    <rect x="123.5" y="12" width="9" height="38" rx="4.5" transform="rotate(135 128 128)"/>
+    <rect x="123.5" y="12" width="9" height="38" rx="4.5" transform="rotate(180 128 128)"/>
+    <rect x="123.5" y="12" width="9" height="38" rx="4.5" transform="rotate(225 128 128)"/>
+    <rect x="123.5" y="12" width="9" height="38" rx="4.5" transform="rotate(270 128 128)"/>
+    <rect x="123.5" y="12" width="9" height="38" rx="4.5" transform="rotate(315 128 128)"/>
+  </g>
+  <circle cx="128" cy="128" r="48" fill="url(#sunCore)"/>
+  <circle cx="112" cy="116" r="14" fill="#FFFFFF" opacity="0.18"/>
+</svg>

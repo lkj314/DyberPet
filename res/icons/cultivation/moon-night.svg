@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <radialGradient id="moonBody" cx="40%" cy="38%" r="65%">
+      <stop offset="0%" stop-color="#F4F8FB"/>
+      <stop offset="60%" stop-color="#DCE7EE"/>
+      <stop offset="100%" stop-color="#AEBFD0"/>
+    </radialGradient>
+    <radialGradient id="moonHalo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#CFE0F0" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#CFE0F0" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="128" cy="128" r="94" fill="url(#moonHalo)">
+    <animate attributeName="opacity" values="0.55;0.95;0.55" dur="5.5s" repeatCount="indefinite"/>
+    <animate attributeName="r" values="90;100;90" dur="5.5s" repeatCount="indefinite"/>
+  </circle>
+  <path d="M150 36 A 92 92 0 1 0 150 220 A 72 72 0 1 1 150 36 Z" fill="url(#moonBody)"/>
+  <circle cx="176" cy="74" r="2.6" fill="#EAF2F2">
+    <animate attributeName="opacity" values="0.2;1;0.2" dur="3s" begin="0s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="78" cy="150" r="2" fill="#EAF2F2">
+    <animate attributeName="opacity" values="0.2;1;0.2" dur="2.4s" begin="0.8s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="92" cy="86" r="1.6" fill="#EAF2F2">
+    <animate attributeName="opacity" values="0.2;0.9;0.2" dur="2.8s" begin="1.4s" repeatCount="indefinite"/>
+  </circle>
+</svg>

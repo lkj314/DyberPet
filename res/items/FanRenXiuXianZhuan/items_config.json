@@ -1,0 +1,315 @@
+{
+  "辟谷丹": {
+    "image": "01_bigudan.png",
+    "description": "低阶修士常备的辟谷丹药，服下一粒可较长时间不觉饥饿，便于闭关或赶路。",
+    "effect_HP": 20,
+    "effect_FV": 5,
+    "drop_rate": 0.1,
+    "fv_lock": 0,
+    "type": "consumable",
+    "cost": 125,
+    "buff": {
+      "effect": "HP_stop",
+      "expiration": 1800,
+      "description": "使用后 30 分钟内饱食度不会下降。"
+    }
+  },
+  "筑基丹": {
+    "image": "02_zhujidan.png",
+    "description": "炼气期修士冲击筑基境界的关键丹药，药力强劲而珍贵，常被宗门严格掌控。",
+    "effect_HP": 5,
+    "effect_FV": 35,
+    "drop_rate": 0.1,
+    "fv_lock": 0,
+    "type": "consumable",
+    "cost": 200
+  },
+  "黄龙丹": {
+    "image": "03_huanglongdan.png",
+    "description": "增进功力丹药之一，可辅助低阶修士精进修为、改善体质。",
+    "effect_HP": 10,
+    "effect_FV": 10,
+    "drop_rate": 0.1,
+    "fv_lock": 0,
+    "type": "consumable",
+    "cost": 100
+  },
+  "金髓丸": {
+    "image": "04_jinsuiwan.png",
+    "description": "修炼丹药，可滋养筋骨、固本培元并辅助提升功力。",
+    "effect_HP": 5,
+    "effect_FV": 10,
+    "drop_rate": 0.1,
+    "fv_lock": 0,
+    "type": "consumable",
+    "cost": 75
+  },
+  "养精丹": {
+    "image": "05_yangjingdan.png",
+    "description": "用于温养精神、缓解疲惫的恢复丹药，适合修炼或施法消耗后服用。",
+    "effect_HP": 5,
+    "effect_FV": 5,
+    "drop_rate": 0.1,
+    "fv_lock": 0,
+    "type": "consumable",
+    "cost": 50
+  },
+  "定颜丹": {
+    "image": "06_dingyandan.png",
+    "description": "可使服用者容颜长久保持在服丹时的状态，因功效特殊而深受修士珍视。",
+    "effect_HP": 0,
+    "effect_FV": 35,
+    "drop_rate": 0.1,
+    "fv_lock": 0,
+    "type": "consumable",
+    "cost": 175
+  },
+  "降尘丹": {
+    "image": "07_jiangchendan.png",
+    "description": "可提高筑基期修士凝结金丹成功几率的珍贵灵丹，是结丹前的重要助力。",
+    "effect_HP": 5,
+    "effect_FV": 35,
+    "drop_rate": 0.1,
+    "fv_lock": 0,
+    "type": "consumable",
+    "cost": 250
+  },
+  "补天丹": {
+    "image": "08_butiandan.png",
+    "description": "由五色骸骨异变所得的罕见灵物，蕴含改易资质、弥补先天不足的神奇力量。",
+    "effect_HP": 0,
+    "effect_FV": 60,
+    "drop_rate": 0,
+    "fv_lock": 1,
+    "type": "consumable",
+    "cost": 500
+  },
+  "九曲灵参": {
+    "image": "09_jiuqulingshen.png",
+    "description": "生长多年后可开启灵智的天地灵药，外形近似白嫩人参，是炼制高阶丹药的珍稀主材。",
+    "effect_HP": 10,
+    "effect_FV": 50,
+    "drop_rate": 0,
+    "fv_lock": 1,
+    "type": "consumable",
+    "cost": 500
+  },
+  "万年灵乳": {
+    "image": "10_wannianlingru.png",
+    "description": "天地灵气长期凝聚形成的乳白灵液，可迅速补充大量法力，是极珍贵的恢复灵物。",
+    "effect_HP": 10,
+    "effect_FV": 50,
+    "drop_rate": 0,
+    "fv_lock": 1,
+    "type": "consumable",
+    "cost": 600
+  },
+  "回气丹": {
+    "image": "11_huiqidan.png",
+    "description": "常见的法力恢复丹药，可在斗法或赶路后帮助修士较快回复灵力。",
+    "effect_HP": 8,
+    "effect_FV": 6,
+    "drop_rate": 0.1,
+    "fv_lock": 0,
+    "type": "consumable",
+    "cost": 100
+  },
+  "小还丹": {
+    "image": "12_xiaohuandan.png",
+    "description": "偏重疗伤与恢复元气的丹药，可缓解一般伤势，适合外出历练时备用。",
+    "effect_HP": 5,
+    "effect_FV": 5,
+    "drop_rate": 0.1,
+    "fv_lock": 0,
+    "type": "consumable",
+    "cost": 100
+  },
+  "培元丹": {
+    "image": "13_peiyuandan.png",
+    "description": "用于培补元气、稳固根基的修炼丹药，药性温和，适合日常打坐辅助。",
+    "effect_HP": 5,
+    "effect_FV": 10,
+    "drop_rate": 0.1,
+    "fv_lock": 0,
+    "type": "consumable",
+    "cost": 75
+  },
+  "洗髓丹": {
+    "image": "14_xisuidan.png",
+    "description": "可洗炼筋骨经脉、改善体质的灵丹，服用时药力深入骨髓，价值颇高。",
+    "effect_HP": 8,
+    "effect_FV": 36,
+    "drop_rate": 0.1,
+    "fv_lock": 0,
+    "type": "consumable",
+    "cost": 250
+  },
+  "合气丹": {
+    "image": "15_heqidan.png",
+    "description": "帮助修士调和体内灵气、辅助修炼的丹药，适合需要平稳运转法力时服用。",
+    "effect_HP": 4,
+    "effect_FV": 10,
+    "drop_rate": 0.1,
+    "fv_lock": 0,
+    "type": "consumable",
+    "cost": 70
+  },
+  "清灵散": {
+    "image": "16_qinglingsan.png",
+    "description": "药性清正的解毒药散，可用于化解多种常见毒性，是历练时的重要备用药。",
+    "effect_HP": 5,
+    "effect_FV": 5,
+    "drop_rate": 0.1,
+    "fv_lock": 0,
+    "type": "consumable",
+    "cost": 80
+  },
+  "灵露": {
+    "image": "17_linglu.png",
+    "description": "由灵花、灵草或灵木凝聚出的甘甜灵液，可直接食用，也可作为炼丹调配材料。",
+    "effect_HP": 15,
+    "effect_FV": 15,
+    "drop_rate": 0.1,
+    "fv_lock": 0,
+    "type": "consumable",
+    "cost": 125
+  },
+  "灵果": {
+    "image": "18_lingguo.png",
+    "description": "吸收天地灵气生长的果实，味道清甜并含有少量灵力，可食用或作为炼丹材料。",
+    "effect_HP": 10,
+    "effect_FV": 10,
+    "drop_rate": 0.1,
+    "fv_lock": 0,
+    "type": "consumable",
+    "cost": 100
+  },
+  "灵茶": {
+    "image": "19_lingcha.png",
+    "description": "以蕴含灵气的茶叶冲泡而成，清香回甘，可舒缓心神并略微恢复精神。",
+    "effect_HP": 5,
+    "effect_FV": 15,
+    "drop_rate": 0.1,
+    "fv_lock": 0,
+    "type": "consumable",
+    "cost": 100,
+    "buff": {
+      "effect": "fv",
+      "value": 1,
+      "interval": 30,
+      "expiration": 300,
+      "description": "使用后每 30 秒增加 1 点好感度，持续 5 分钟。"
+    }
+  },
+  "掌天瓶": {
+    "image": "20_zhangtianping.png",
+    "description": "神秘的翠绿小瓶，可凝聚灵液催熟灵药，是韩立踏上仙途的最大机缘。",
+    "type": "collection",
+    "cost": -1,
+    "fv_lock": 0,
+    "fv_reward": [
+      0
+    ]
+  },
+  "绿煌剑": {
+    "image": "21_lvhuangjian.png",
+    "description": "韩立获得的第一件法宝，能化作绿光飞剑，用于御敌与御剑飞行。",
+    "type": "collection",
+    "cost": -1,
+    "fv_lock": 0,
+    "fv_reward": [
+      0
+    ]
+  },
+  "青竹蜂云剑": {
+    "image": "22_qingzhufengyunjian.png",
+    "description": "以金雷竹炼成的七十二柄本命飞剑，可释放辟邪神雷并组成强大剑阵。",
+    "type": "collection",
+    "cost": -1,
+    "fv_lock": 2,
+    "fv_reward": [
+      2
+    ]
+  },
+  "风雷翅": {
+    "image": "23_fengleichi.png",
+    "description": "蕴含风雷之力的飞行法宝，展开双翼便可施展迅疾无比的雷遁之术。",
+    "type": "collection",
+    "cost": -1,
+    "fv_lock": 3,
+    "pet_limit": ["韩立"],
+    "fv_reward": [
+      3
+    ]
+  },
+  "青元剑诀": {
+    "image": "24_qingyuanjianjue.png",
+    "description": "青元子所创的木属性剑修功法，附带剑影分光与大庚剑阵等神通。",
+    "type": "collection",
+    "cost": -1,
+    "fv_lock": 1,
+    "fv_reward": [
+      1
+    ]
+  },
+  "虚天鼎": {
+    "image": "25_xutianding.png",
+    "description": "虚天殿中的通天灵宝，可放出青丝收摄敌物，鼎内还封存着乾蓝冰焰。",
+    "type": "collection",
+    "cost": -1,
+    "fv_lock": 3,
+    "fv_reward": [
+      3
+    ]
+  },
+  "大衍决": {
+    "image": "26_dayanjue.png",
+    "description": "大衍神君所创的炼神功法，可大幅增强神识，并包含精妙的傀儡秘术。",
+    "type": "collection",
+    "cost": -1,
+    "fv_lock": 1,
+    "fv_reward": [
+      1
+    ]
+  },
+  "金雷竹": {
+    "image": "27_jinleizhu.png",
+    "description": "蕴含辟邪神雷的珍稀灵竹，是炼制青竹蜂云剑的核心材料。",
+    "type": "collection",
+    "cost": -1,
+    "fv_lock": 2,
+    "fv_reward": [
+      2
+    ]
+  },
+  "梵圣真片": {
+    "image": "28_fanshengzhenpian.png",
+    "description": "妖族代代相传的残缺圣物，其中记载着威力强大的梵圣妖功。",
+    "type": "collection",
+    "cost": -1,
+    "fv_lock": 3,
+    "fv_reward": [
+      3
+    ]
+  },
+  "平天尺": {
+    "image": "29_pingtianchi.png",
+    "description": "封存法宝威能的尺形符宝，催动后可化作巨大光尺镇压强敌。",
+    "type": "collection",
+    "cost": -1,
+    "fv_lock": 1,
+    "fv_reward": [
+      1
+    ]
+  },
+  "机关傀儡": {
+    "image": "30_jiguankuilei.png",
+    "description": "依照傀儡秘术炼制的战斗机关，可受神识操纵并释放法术攻击。",
+    "type": "collection",
+    "cost": -1,
+    "fv_lock": 1,
+    "fv_reward": [
+      1
+    ]
+  }
+}

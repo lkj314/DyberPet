@@ -1,0 +1,64 @@
+{
+  "id": "doudizhu",
+  "name": "斗地主陪玩",
+  "version": "2.0.0",
+  "author": "DyberPet",
+  "description": "像真实斗地主一样出牌就有语音（预合成，零延迟）：对三、王炸、要不起全都有。桌宠陪你打牌+当狗头军师帮你记牌算牌。",
+  "entry": "main:DouDizhuPlugin",
+  "min_app_version": "0.6.7",
+  "launchable": true,
+  "permissions": ["pet.bubble", "pet.react", "pet.play_audio", "pet.speak", "net.ollama"],
+  "settings_schema": [
+    {
+      "key": "enabled",
+      "type": "switch",
+      "default": true,
+      "label": "启用斗地主陪玩",
+      "description": "启用插件（开启后到插件中心点「打开」手动开局，不会随桌宠自动弹窗）",
+      "icon": "GAME"
+    },
+    {
+      "key": "difficulty",
+      "type": "slider",
+      "min": 1,
+      "max": 5,
+      "default": 3,
+      "label": "AI 牌力",
+      "description": "1=萌新 5=牌神，控制 AI 出牌失误率",
+      "icon": "ROBOT"
+    },
+    {
+      "key": "voice",
+      "type": "switch",
+      "default": true,
+      "label": "牌型语音",
+      "description": "打出组合牌触发预合成语音（对三/王炸/要不起），离线可用零延迟",
+      "icon": "MICROPHONE"
+    },
+    {
+      "key": "pet_taunt",
+      "type": "switch",
+      "default": true,
+      "label": "桌宠吐槽",
+      "description": "桌宠在炸弹、送牌、胜负等节点发气泡吐槽",
+      "icon": "EMOJI_TAB_SYMBOLS"
+    },
+    {
+      "key": "advisor",
+      "type": "switch",
+      "default": false,
+      "label": "AI 军师",
+      "description": "Ollama 把记牌简报说成狗头军师建议（帮你算对手手牌，需本机 Ollama）",
+      "icon": "LIGHTBULB"
+    },
+    {
+      "key": "card_theme",
+      "type": "combo",
+      "default": "经典",
+      "label": "牌面主题",
+      "description": "牌桌配色：经典 / 霓虹 / 像素",
+      "options": ["经典", "霓虹", "像素"],
+      "icon": "PALETTE"
+    }
+  ]
+}

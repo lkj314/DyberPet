@@ -1,0 +1,56 @@
+{
+  "system": {
+    "sound": "notification.wav"
+  },
+  "status_hp": {
+    "sound": "notification.wav"
+  },
+  "status_fv": {
+    "sound": "notification.wav"
+  },
+  "status_coin": {
+    "sound": "notification.wav"
+  },
+  "start_tomato": {
+    "sound": "notification.wav"
+  },
+  "start_focus": {
+    "sound": "notification.wav"
+  },
+  "end_tomato": {
+    "sound": "notification.wav"
+  },
+  "end_focus": {
+    "sound": "notification.wav"
+  },
+  "cancel_tomato": {
+    "sound": "notification.wav"
+  },
+  "cancel_focus": {
+    "sound": "notification.wav"
+  },
+  "greeting_1": {
+    "sound": "notification.wav"
+  },
+  "greeting_2": {
+    "sound": "notification.wav"
+  },
+  "greeting_3": {
+    "sound": "notification.wav"
+  },
+  "greeting_4": {
+    "sound": "notification.wav"
+  },
+  "greeting_5": {
+    "sound": "notification.wav"
+  },
+  "feed_1": {
+    "sound": "notification.wav"
+  },
+  "feed_2": {
+    "sound": "notification.wav"
+  },
+  "feed_3": {
+    "sound": "notification.wav"
+  }
+}

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <g fill="#6FB7A8">
+    <circle cx="70" cy="230" r="4">
+      <animate attributeName="cy" values="236;24" dur="3.4s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.9;0" dur="3.4s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="128" cy="230" r="5">
+      <animate attributeName="cy" values="236;24" dur="4.2s" begin="1s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.9;0" dur="4.2s" begin="1s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="186" cy="230" r="4">
+      <animate attributeName="cy" values="236;24" dur="3.8s" begin="2s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.9;0" dur="3.8s" begin="2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="100" cy="230" r="3">
+      <animate attributeName="cy" values="236;24" dur="3s" begin="0.5s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.8;0" dur="3s" begin="0.5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="158" cy="230" r="3">
+      <animate attributeName="cy" values="236;24" dur="3.6s" begin="1.6s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.8;0" dur="3.6s" begin="1.6s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+</svg>

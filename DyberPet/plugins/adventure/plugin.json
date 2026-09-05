@@ -1,0 +1,74 @@
+{
+  "id": "adventure",
+  "name": "世界冒险",
+  "version": "1.0.0",
+  "author": "DyberPet",
+  "description": "让桌宠真的出门历练：外出期间道韵分身留守桌面、传讯符陆续寄回，归来带回修为、灵石与天材地宝。与修为、商店、小游戏互相咬合的缺席叙事系统。",
+  "entry": "main:AdventurePlugin",
+  "min_app_version": "0.6.7",
+  "launchable": true,
+  "permissions": ["pet.bubble", "pet.notify", "pet.play_act", "net.ollama"],
+  "settings_schema": [
+    {
+      "key": "enable_adventure",
+      "type": "switch",
+      "default": true,
+      "label": "启用历练",
+      "description": "启用世界冒险系统（详情与派出在角色面板「历练」页）",
+      "icon": "SEND"
+    },
+    {
+      "key": "auto_dispatch",
+      "type": "switch",
+      "default": false,
+      "label": "归来后自动再派",
+      "description": "历练归来后自动去可去的最高阶秘境再历练一轮",
+      "icon": "SYNC"
+    },
+    {
+      "key": "default_duration",
+      "type": "combo",
+      "default": "中程(2时)",
+      "label": "默认时长",
+      "description": "自动再派时的时长档；手动派出可在历练页逐次选择",
+      "options": ["短程(30分)", "中程(2时)", "长程(过夜)"],
+      "icon": "DATE_TIME"
+    },
+    {
+      "key": "message_count",
+      "type": "slider",
+      "min": 1,
+      "max": 5,
+      "default": 3,
+      "label": "传讯符数量",
+      "description": "一次历练寄回几张传讯符（均匀分布，绝不剧透结果）",
+      "icon": "MAIL"
+    },
+    {
+      "key": "narrative_length",
+      "type": "combo",
+      "default": "短篇(80字)",
+      "label": "见闻篇幅",
+      "description": "归来讲述的篇幅（传讯符始终简短）",
+      "options": ["一句话", "短篇(80字)", "长篇(200字)"],
+      "icon": "BOOK"
+    },
+    {
+      "key": "risk_preference",
+      "type": "combo",
+      "default": "均衡",
+      "label": "历练策略",
+      "description": "稳健：成功率+5%收益-10%；激进：成功率-10%收益+30%",
+      "options": ["稳健(低风险)", "均衡", "激进(高风险高回报)"],
+      "icon": "PIE_CHART"
+    },
+    {
+      "key": "llm_tale",
+      "type": "switch",
+      "default": true,
+      "label": "Ollama 叙事",
+      "description": "用本地 Ollama 按人设把历练结果讲成故事（关闭则用内置文案，离线可用）",
+      "icon": "ROBOT"
+    }
+  ]
+}

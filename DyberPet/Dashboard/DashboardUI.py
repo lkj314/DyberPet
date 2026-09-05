@@ -9,6 +9,8 @@ from qfluentwidgets import (NavigationItemPosition, MessageBox, setTheme, Theme,
 from qfluentwidgets import FluentIcon as FIF
 
 from .statusUI import statusInterface
+from .cultiUI import cultiInterface
+from .adventureUI import adventureInterface
 from .inventoryUI import backpackInterface
 from .shopUI import shopInterface
 from .taskUI import taskInterface
@@ -40,6 +42,8 @@ class DashboardMainWindow(FluentWindow):
 
         # create sub interface
         self.statusInterface = statusInterface(sizeHintdb=(minWidth, minHeight), parent=self)
+        self.cultiInterface = cultiInterface(sizeHintdb=(minWidth, minHeight), parent=self)
+        self.adventureInterface = adventureInterface(sizeHintdb=(minWidth, minHeight), parent=self)
         self.backpackInterface = backpackInterface(sizeHintdb=(minWidth, minHeight), parent=self)
         self.shopInterface = shopInterface(sizeHintdb=(minWidth, minHeight), parent=self)
         self.taskInterface = taskInterface(sizeHintdb=(minWidth, minHeight), parent=self)
@@ -55,6 +59,14 @@ class DashboardMainWindow(FluentWindow):
         self.addSubInterface(self.statusInterface,
                              QIcon(os.path.join(basedir, "res/icons/Dashboard/progress.svg")),
                              self.tr('Status'))
+        # 修仙之路（修仙放置系统主页，紧跟角色状态）
+        self.addSubInterface(self.cultiInterface,
+                             FIF.LEAF,
+                             '修仙之路')
+        # 历练（世界冒险系统主页，紧跟修仙之路）
+        self.addSubInterface(self.adventureInterface,
+                             FIF.SEND,
+                             '历练')
         self.addSubInterface(self.backpackInterface,
                              QIcon(os.path.join(basedir, "res/icons/Dashboard/backpack.svg")),
                              self.tr('Backpack'))
@@ -101,6 +113,16 @@ class DashboardMainWindow(FluentWindow):
             self.hide()
         else:
             self.show()
+
+    def show_cultivation(self):
+        """打开角色面板并定位到「修仙之路」页（桌宠修为条/插件中心入口）。"""
+        self.show()
+        self.switchTo(self.cultiInterface)
+
+    def show_adventure(self):
+        """打开角色面板并定位到「历练」页（道韵/传讯符点击入口）。"""
+        self.show()
+        self.switchTo(self.adventureInterface)
 
     def closeEvent(self, event):
         event.ignore()  # Ignore the close event

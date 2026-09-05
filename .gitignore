@@ -43,3 +43,6 @@ DyberPet.spec
 # 本地大模型权重（2.3GB+ GGUF，绝不入库，仅本地推理用）
 models/
 *.gguf
+
+# WorkBuddy 内部工作记忆（AI 助手本地数据，绝不入库）
+.workbuddy/

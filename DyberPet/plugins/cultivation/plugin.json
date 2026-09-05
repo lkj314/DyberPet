@@ -1,0 +1,46 @@
+{
+  "id": "cultivation",
+  "name": "修仙放置",
+  "version": "1.2.0",
+  "author": "DyberPet",
+  "description": "桌宠修仙放置系统：挂机涨修为、突破境界，从炼气到飞升。全部详情与操作在「角色面板」的「修仙之路」页；修炼产出灵石（商店通用货币），炼丹炉耗灵石炼出与商店同源的丹药，服丹获得修为与修行增益；桌宠状态联动修为速率——抚摸加成、闭关双修、斗法历练、随机顿悟；以韩立为主形象量身定做，境界提升触发专属演出动作。",
+  "entry": "main:CultivationPlugin",
+  "min_app_version": "0.6.7",
+  "launchable": true,
+  "permissions": [
+    "pet.bubble",
+    "pet.react",
+    "pet.notify",
+    "pet.play_act",
+    "pet.add_coins",
+    "pet.add_item",
+    "net.ollama"
+  ],
+  "settings_schema": [
+    {
+      "key": "auto_break",
+      "type": "switch",
+      "default": true,
+      "label": "自动突破",
+      "description": "修为圆满后自动尝试突破（有成功率，失败损失部分修为并虚弱）；关闭后需到面板手动突破",
+      "icon": "UP"
+    },
+    {
+      "key": "llm_talk",
+      "type": "switch",
+      "default": false,
+      "label": "AI 感言",
+      "description": "突破感言/顿悟语录由 Ollama 本地生成（说话风格随境界进化，需本机 Ollama）",
+      "icon": "LIGHTBULB"
+    },
+    {
+      "key": "model",
+      "type": "combo",
+      "default": "qwen2.5:7b",
+      "label": "Ollama 模型",
+      "description": "感言生成使用的本地模型",
+      "options_ref": "ollama_models",
+      "icon": "ROBOT"
+    }
+  ]
+}

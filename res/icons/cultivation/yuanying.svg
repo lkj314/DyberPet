@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <radialGradient id="spirit" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#9FE0D2" stop-opacity="0.55"/>
+      <stop offset="70%" stop-color="#6FB7A8" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#6FB7A8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="128" cy="128" r="78" fill="url(#spirit)">
+    <animate attributeName="opacity" values="0.6;1;0.6" dur="4s" repeatCount="indefinite"/>
+    <animate attributeName="r" values="72;82;72" dur="4s" repeatCount="indefinite"/>
+  </circle>
+  <g>
+    <animateTransform attributeName="transform" type="translate" values="0 0; 0 -6; 0 0" dur="4s" repeatCount="indefinite"/>
+    <circle cx="128" cy="96" r="26" fill="#3E8E7E"/>
+    <path d="M104 150 Q128 110 152 150 Q150 178 128 182 Q106 178 104 150 Z" fill="#3E8E7E"/>
+    <path d="M104 150 Q88 168 104 176 Q120 172 120 156 Z" fill="#347A6C"/>
+    <path d="M152 150 Q168 168 152 176 Q136 172 136 156 Z" fill="#347A6C"/>
+    <circle cx="120" cy="92" r="3.4" fill="#EAF2F2"/>
+    <circle cx="136" cy="92" r="3.4" fill="#EAF2F2"/>
+  </g>
+  <g fill="#E0B449">
+    <animateTransform attributeName="transform" type="rotate" from="0 128 128" to="360 128 128" dur="9s" repeatCount="indefinite"/>
+    <circle cx="128" cy="40" r="5"/>
+    <circle cx="128" cy="216" r="4" fill="#6FB7A8"/>
+    <circle cx="40" cy="128" r="4" fill="#6FB7A8"/>
+    <circle cx="216" cy="128" r="5"/>
+  </g>
+</svg>

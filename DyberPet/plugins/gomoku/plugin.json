@@ -1,0 +1,62 @@
+{
+  "id": "gomoku",
+  "name": "五子棋陪玩",
+  "version": "1.0.0",
+  "author": "DyberPet",
+  "description": "为 AI 桌宠打造的可嵌入五子棋游戏：会吐槽、会放水、会演戏的陪玩 AI，配合桌宠语音实时解说。",
+  "entry": "main:GomokuPlugin",
+  "min_app_version": "0.6.7",
+  "launchable": true,
+  "permissions": ["pet.bubble", "pet.react", "pet.speak", "net.ollama"],
+  "settings_schema": [
+    {
+      "key": "enabled",
+      "type": "switch",
+      "default": true,
+      "label": "启用五子棋陪玩",
+      "description": "启用插件（开启后到插件中心点「打开」手动启动对弈，不会随桌宠自动弹窗）",
+      "icon": "GAME"
+    },
+    {
+      "key": "difficulty",
+      "type": "combo",
+      "default": "普通",
+      "label": "AI 难度",
+      "description": "从萌新到地狱五档，控制 AI 的失误率",
+      "options": ["萌新", "简单", "普通", "困难", "地狱"],
+      "icon": "ROBOT"
+    },
+    {
+      "key": "taunt",
+      "type": "switch",
+      "default": true,
+      "label": "吐槽模式",
+      "description": "AI 会在关键节点嘲讽、甩锅、嘚瑟",
+      "icon": "EMOJI_TAB_SYMBOLS"
+    },
+    {
+      "key": "handicap",
+      "type": "switch",
+      "default": false,
+      "label": "放水模式",
+      "description": "AI 故意让子，适合带新手",
+      "icon": "STAR"
+    },
+    {
+      "key": "voice",
+      "type": "switch",
+      "default": true,
+      "label": "语音解说",
+      "description": "开启后用桌宠真实语音(TTS)朗读吐槽（需联网）；关闭则只显示气泡与动画",
+      "icon": "MICROPHONE"
+    },
+    {
+      "key": "llm",
+      "type": "switch",
+      "default": false,
+      "label": "AI 实时吐槽",
+      "description": "关键节点用本机 Ollama 生成更自然的吐槽（预设先顶替思考空窗）",
+      "icon": "ROBOT"
+    }
+  ]
+}

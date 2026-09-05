@@ -13,6 +13,7 @@ from .GameSaveUI import SaveInterface
 from .CharCardUI import CharInterface
 from .ItemCardUI import ItemInterface
 from .PetCardUI import PetInterface
+from .PluginCenterUI import PluginCenterInterface
 from sys import platform
 import DyberPet.settings as settings
 basedir = settings.BASEDIR
@@ -31,6 +32,7 @@ class ControlMainWindow(FluentWindow):
         self.charCardInterface = CharInterface(sizeHintDyber=(minWidth, minHeight), parent=self)
         self.itemCardInterface = ItemInterface(sizeHintDyber=(minWidth, minHeight), parent=self)
         self.petCardInterface = PetInterface(sizeHintDyber=(minWidth, minHeight), parent=self)
+        self.pluginCenterInterface = PluginCenterInterface(parent=self)
 
         self.initNavigation()
         self.setMinimumSize(minWidth, minHeight)
@@ -51,6 +53,9 @@ class ControlMainWindow(FluentWindow):
         self.addSubInterface(self.petCardInterface,
                              QIcon(os.path.join(basedir, "res/icons/system/minipet.svg")),
                              self.tr('Mini-Pets'))
+        self.addSubInterface(self.pluginCenterInterface,
+                             FIF.APPLICATION,
+                             self.tr('Plugins'))
 
 
         self.navigationInterface.setExpandWidth(200)

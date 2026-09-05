@@ -11,7 +11,7 @@ from pathlib import Path
 import pynput.mouse as mouse
 
 from PySide6.QtWidgets import *
-from PySide6.QtCore import Qt, QTimer, QObject, QPoint, QEvent, QElapsedTimer
+from PySide6.QtCore import Qt, QTimer, QObject, QPoint, QEvent, QElapsedTimer, QTime
 from PySide6.QtCore import QObject, QThread, Signal, QRectF, QRect, QSize, QPropertyAnimation, QAbstractAnimation, QEasingCurve
 from PySide6.QtGui import QImage, QPixmap, QIcon, QCursor, QPainter, QFont, QFontMetrics, QAction, QBrush, QPen, QColor, QFontDatabase, QPainterPath, QRegion, QIntValidator, QDoubleValidator
 
@@ -355,6 +355,8 @@ class PetWidget(QWidget):
     addItem_toInven = Signal(int, list, name='addItem_toInven')
     fvlvl_changed_main_note = Signal(int, name='fvlvl_changed_main_note')
     fvlvl_changed_main_inve = Signal(int, name='fvlvl_changed_main_inve')
+    touched = Signal(name='touched')  # 用户点击/抚摸桌宠（修仙系统抚慰加成等）
+    show_adventure_page = Signal(name='show_adventure_page')  # 打开角色面板·历练页
     hptier_changed_main_note = Signal(int, str, name='hptier_changed_main_note')
 
     setup_acc = Signal(dict, int, int, name='setup_acc')
@@ -367,6 +369,7 @@ class PetWidget(QWidget):
 
     lang_changed = Signal(name='lang_changed')
     show_controlPanel = Signal(name='show_controlPanel')
+    show_culti_page = Signal(name='show_culti_page')  # 打开角色面板·修仙页
 
     show_dashboard = Signal(name='show_dashboard')
     hp_updated = Signal(int, name='hp_updated')
@@ -455,6 +458,13 @@ class PetWidget(QWidget):
         # 启动完毕10s后检查好感度等级奖励补偿
         self.compensate_timer = None
         self._setup_compensate()
+
+        # 昼夜模式状态机（借鉴官方 v0.8.10，30s 检查一次）
+        self._day_night_state = None
+        self.day_night_timer = QTimer(self)
+        self.day_night_timer.setInterval(30000)
+        self.day_night_timer.timeout.connect(self._check_day_night)
+        self.day_night_timer.start()
 
     def _setup_compensate(self):
         self._stop_compensate()
@@ -835,7 +845,19 @@ class PetWidget(QWidget):
         # Change Character
         self.change_menu = RoundMenu(self.tr("Change Character"))
         self.change_menu.setIcon(QIcon(os.path.join(basedir,'res/icons/system/character.svg')))
-        change_acts = [_build_act(name, self.change_menu, self._change_pet) for name in pets]
+        # 角色图鉴（读取各角色 info/info.json，借鉴官方 v0.8.10）
+        self.gallery_action = Action(QIcon(os.path.join(basedir, 'res/icons/system/character.svg')),
+                                     self.tr('Role Gallery'), self.change_menu)
+        self.gallery_action.triggered.connect(self._open_role_gallery)
+        self.change_menu.addAction(self.gallery_action)
+        self.change_menu.addSeparator()
+        change_acts = []
+        for name in pets:
+            act = _build_act(name, self.change_menu, self._change_pet)
+            pfp = os.path.join(basedir, 'res/role', name, 'info', 'pfp.png')
+            if os.path.isfile(pfp):
+                act.setIcon(QIcon(pfp))
+            change_acts.append(act)
         self.change_menu.addActions(change_acts)
         #menu.addMenu(self.change_menu)
 
@@ -1119,6 +1141,51 @@ class PetWidget(QWidget):
         self._setup_compensate()
     
 
+    # ------------------------------------------------------------------
+    # 昼夜模式 + 角色图鉴（借鉴官方 v0.8.10）
+    # ------------------------------------------------------------------
+    def _check_day_night(self):
+        if not getattr(settings, 'day_night_on', False):
+            self._day_night_state = None
+            return
+        now = QTime.currentTime().toString('HH:mm')
+        night = self._in_night_window(now)
+        if self._day_night_state is None:
+            # 首次校准：只记录状态，不播动画
+            self._day_night_state = 'night' if night else 'day'
+            return
+        if night and self._day_night_state != 'night':
+            self._day_night_state = 'night'
+            self.register_notification('system', '夜深了，{} 要休息了…'.format(self.curr_pet_name))
+            for act in ('fall_asleep', 'sleep', 'meditate'):
+                if act in self.pet_conf.act_dict:
+                    self._show_act(act)
+                    break
+        elif not night and self._day_night_state == 'night':
+            self._day_night_state = 'day'
+            self.register_notification('system', '早上好！新的一天开始啦~')
+            if 'default' in self.pet_conf.act_dict:
+                self._show_act('default')
+
+    @staticmethod
+    def _in_night_window(now: str) -> bool:
+        """夜窗 = 从 night_start 起到次日 day_start 止（循环区间，自洽处理跨午夜）。"""
+        def mins(t):
+            h, m = t.split(':')[:2]
+            return int(h) * 60 + int(m)
+        n = mins(getattr(settings, 'night_start', '23:00'))
+        d = mins(getattr(settings, 'day_start', '08:00'))
+        t = mins(now)
+        return ((t - n) % 1440) < ((d - n) % 1440)
+
+    def _open_role_gallery(self):
+        try:
+            from DyberPet.RoleGallery import RoleGalleryDialog
+            dlg = RoleGalleryDialog(self)
+            dlg.exec()
+        except Exception as e:
+            print(f'[gallery] open failed: {e!r}')
+
     def _change_pet(self, pet_name: str) -> None:
         """
         改变宠物
@@ -1137,6 +1204,7 @@ class PetWidget(QWidget):
 
         # reload pet data
         settings.pet_data._change_pet(pet_name)
+        self._day_night_state = None
 
         # reload new pet
         self.init_conf(pet_name)
@@ -1633,10 +1701,22 @@ class PetWidget(QWidget):
                                 int(settings.items_data.item_dict[item_name]['effect_FV']*reward_factor),
                                 from_mod='inventory', send_note=True)
 
+        # 修仙丹药联动（修仙放置系统：服丹额外带来修为/增益，事件由插件演出）
+        try:
+            from DyberPet.cultivation_service import apply_pill_if_known
+            apply_pill_if_known(item_name)
+        except Exception:
+            pass
+
     def add_item(self, n_items, item_names=[]):
         self.addItem_toInven.emit(n_items, item_names)
 
     def patpat(self):
+        # 广播"被抚摸"事件（修仙抚慰加成等插件监听）
+        try:
+            self.touched.emit()
+        except Exception:
+            pass
         # 摸摸动画
         if self.click_count >= 7:
             self.bubble_manager.trigger_bubble("pat_frequent")

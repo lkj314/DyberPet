@@ -1,0 +1,482 @@
+{
+  "alchemy": {
+    "images": "alchemy",
+    "anchor": [
+      0,
+      6
+    ],
+    "act_num": 4,
+    "need_move": false,
+    "direction": null,
+    "frame_move": 0,
+    "frame_refresh": 0.08
+  },
+  "alchemy_furnace": {
+    "images": "alchemy_furnace",
+    "anchor": [
+      0,
+      0
+    ],
+    "act_num": 2,
+    "need_move": false,
+    "direction": null,
+    "frame_move": 0,
+    "frame_refresh": 0.08
+  },
+  "checkitem": {
+    "images": "checkitem",
+    "anchor": [
+      0,
+      10
+    ],
+    "act_num": 2,
+    "need_move": false,
+    "direction": null,
+    "frame_move": 0,
+    "frame_refresh": 0.1
+  },
+  "checkitem_end": {
+    "images": "checkitem_end",
+    "anchor": [
+      0,
+      10
+    ],
+    "act_num": 1,
+    "need_move": false,
+    "direction": null,
+    "frame_move": 0,
+    "frame_refresh": 0.06
+  },
+  "checkitem_start": {
+    "images": "checkitem_start",
+    "anchor": [
+      0,
+      10
+    ],
+    "act_num": 1,
+    "need_move": false,
+    "direction": null,
+    "frame_move": 0,
+    "frame_refresh": 0.06
+  },
+  "dageng_sword_array": {
+    "images": "dageng_sword_array",
+    "anchor": [
+      0,
+      0
+    ],
+    "act_num": 1,
+    "need_move": false,
+    "direction": null,
+    "frame_move": 0,
+    "frame_refresh": 0.08
+  },
+  "dayanjue": {
+    "images": "dayanjue",
+    "anchor": [
+      0,
+      9
+    ],
+    "act_num": 6,
+    "need_move": false,
+    "direction": null,
+    "frame_move": 0,
+    "frame_refresh": 0.08
+  },
+  "dayanjue_end": {
+    "images": "dayanjue_end",
+    "anchor": [
+      0,
+      9
+    ],
+    "act_num": 1,
+    "need_move": false,
+    "direction": null,
+    "frame_move": 0,
+    "frame_refresh": 0.06
+  },
+  "dayanjue_start": {
+    "images": "dayanjue_start",
+    "anchor": [
+      0,
+      9
+    ],
+    "act_num": 1,
+    "need_move": false,
+    "direction": null,
+    "frame_move": 0,
+    "frame_refresh": 0.06
+  },
+  "drag": {
+    "images": "drag",
+    "anchor": [
+      0,
+      0
+    ],
+    "act_num": 1,
+    "need_move": false,
+    "direction": null,
+    "frame_move": 0,
+    "frame_refresh": 0.08
+  },
+  "eat": {
+    "images": "eat",
+    "anchor": [
+      0,
+      8
+    ],
+    "act_num": 1,
+    "need_move": false,
+    "direction": null,
+    "frame_move": 0,
+    "frame_refresh": 0.04
+  },
+  "fall": {
+    "images": "fall",
+    "anchor": [
+      0,
+      0
+    ],
+    "act_num": 1,
+    "need_move": false,
+    "direction": null,
+    "frame_move": 0,
+    "frame_refresh": 0.08
+  },
+  "fengleichi": {
+    "images": "fengleichi",
+    "anchor": [
+      0,
+      0
+    ],
+    "act_num": 1,
+    "need_move": false,
+    "direction": null,
+    "frame_move": 0,
+    "frame_refresh": 0.06
+  },
+  "giant_sword": {
+    "images": "giant_sword",
+    "anchor": [
+      0,
+      0
+    ],
+    "act_num": 1,
+    "need_move": false,
+    "direction": null,
+    "frame_move": 0,
+    "frame_refresh": 0.1
+  },
+  "default": {
+    "images": "idle",
+    "anchor": [
+      0,
+      8
+    ],
+    "act_num": 10,
+    "need_move": false,
+    "direction": null,
+    "frame_move": 0,
+    "frame_refresh": 0.1
+  },
+  "luoyanbu": {
+    "images": "luoyanbu",
+    "anchor": [
+      0,
+      8
+    ],
+    "act_num": 5,
+    "need_move": true,
+    "direction": "left",
+    "frame_move": 16,
+    "frame_refresh": 0.03
+  },
+  "luoyanbu_right": {
+    "images": "luoyanbu_right",
+    "anchor": [
+      0,
+      8
+    ],
+    "act_num": 5,
+    "need_move": true,
+    "direction": "right",
+    "frame_move": 16,
+    "frame_refresh": 0.03
+  },
+  "meditate": {
+    "images": "meditate",
+    "anchor": [
+      0,
+      20
+    ],
+    "act_num": 1,
+    "need_move": false,
+    "direction": null,
+    "frame_move": 0,
+    "frame_refresh": 0.08
+  },
+  "onfloor": {
+    "images": "onfloor",
+    "anchor": [
+      0,
+      8
+    ],
+    "act_num": 1,
+    "need_move": false,
+    "direction": null,
+    "frame_move": 0,
+    "frame_refresh": 0.03
+  },
+  "patpat": {
+    "images": "patpat",
+    "anchor": [
+      0,
+      12
+    ],
+    "act_num": 1,
+    "need_move": false,
+    "direction": null,
+    "frame_move": 0,
+    "frame_refresh": 0.08
+  },
+  "qiajue": {
+    "images": "qiajue",
+    "anchor": [
+      0,
+      8
+    ],
+    "act_num": 2,
+    "need_move": false,
+    "direction": null,
+    "frame_move": 0,
+    "frame_refresh": 0.1
+  },
+  "qiajue_end": {
+    "images": "qiajue_end",
+    "anchor": [
+      0,
+      8
+    ],
+    "act_num": 1,
+    "need_move": false,
+    "direction": null,
+    "frame_move": 0,
+    "frame_refresh": 0.06
+  },
+  "qiajue_start": {
+    "images": "qiajue_start",
+    "anchor": [
+      0,
+      8
+    ],
+    "act_num": 1,
+    "need_move": false,
+    "direction": null,
+    "frame_move": 0,
+    "frame_refresh": 0.06
+  },
+  "qianlanbingyan": {
+    "images": "qianlanbingyan",
+    "anchor": [
+      0,
+      10
+    ],
+    "act_num": 5,
+    "need_move": false,
+    "direction": null,
+    "frame_move": 0,
+    "frame_refresh": 0.06
+  },
+  "qianlanbingyan_end": {
+    "images": "qianlanbingyan_end",
+    "anchor": [
+      0,
+      10
+    ],
+    "act_num": 1,
+    "need_move": false,
+    "direction": null,
+    "frame_move": 0,
+    "frame_refresh": 0.06
+  },
+  "qianlanbingyan_start": {
+    "images": "qianlanbingyan_start",
+    "anchor": [
+      0,
+      10
+    ],
+    "act_num": 1,
+    "need_move": false,
+    "direction": null,
+    "frame_move": 0,
+    "frame_refresh": 0.06
+  },
+  "qingzhu_fengyun_sword": {
+    "images": "qingzhu_fengyun_sword",
+    "anchor": [
+      0,
+      0
+    ],
+    "act_num": 1,
+    "need_move": false,
+    "direction": null,
+    "frame_move": 0,
+    "frame_refresh": 0.05
+  },
+  "read": {
+    "images": "read",
+    "anchor": [
+      0,
+      10
+    ],
+    "act_num": 6,
+    "need_move": false,
+    "direction": null,
+    "frame_move": 0,
+    "frame_refresh": 0.06
+  },
+  "read_end": {
+    "images": "read_end",
+    "anchor": [
+      0,
+      10
+    ],
+    "act_num": 1,
+    "need_move": false,
+    "direction": null,
+    "frame_move": 0,
+    "frame_refresh": 0.06
+  },
+  "read_start": {
+    "images": "read_start",
+    "anchor": [
+      0,
+      10
+    ],
+    "act_num": 1,
+    "need_move": false,
+    "direction": null,
+    "frame_move": 0,
+    "frame_refresh": 0.06
+  },
+  "run": {
+    "images": "run",
+    "anchor": [
+      0,
+      6
+    ],
+    "act_num": 3,
+    "need_move": true,
+    "direction": "left",
+    "frame_move": 8,
+    "frame_refresh": 0.08
+  },
+  "run_right": {
+    "images": "run_right",
+    "anchor": [
+      0,
+      6
+    ],
+    "act_num": 3,
+    "need_move": true,
+    "direction": "right",
+    "frame_move": 8,
+    "frame_refresh": 0.08
+  },
+  "spirit_herb_growth": {
+    "images": "spirit_herb_growth",
+    "anchor": [
+      0,
+      0
+    ],
+    "act_num": 1,
+    "need_move": false,
+    "direction": null,
+    "frame_move": 0,
+    "frame_refresh": 0.08
+  },
+  "spirit_herb_sway": {
+    "images": "spirit_herb_sway",
+    "anchor": [
+      0,
+      0
+    ],
+    "act_num": 1,
+    "need_move": false,
+    "direction": null,
+    "frame_move": 0,
+    "frame_refresh": 0.1
+  },
+  "sword_fly": {
+    "images": "sword_fly",
+    "anchor": [
+      0,
+      0
+    ],
+    "act_num": 3,
+    "need_move": true,
+    "direction": "left",
+    "frame_move": 12,
+    "frame_refresh": 0.04
+  },
+  "sword_fly_right": {
+    "images": "sword_fly_right",
+    "anchor": [
+      0,
+      0
+    ],
+    "act_num": 3,
+    "need_move": true,
+    "direction": "right",
+    "frame_move": 12,
+    "frame_refresh": 0.04
+  },
+  "sword_shadow_split": {
+    "images": "sword_shadow_split",
+    "anchor": [
+      0,
+      0
+    ],
+    "act_num": 1,
+    "need_move": false,
+    "direction": null,
+    "frame_move": 0,
+    "frame_refresh": 0.1
+  },
+  "tend_spirit_herb": {
+    "images": "tend_spirit_herb",
+    "anchor": [
+      0,
+      7
+    ],
+    "act_num": 1,
+    "need_move": false,
+    "direction": null,
+    "frame_move": 0,
+    "frame_refresh": 0.06
+  },
+  "walk": {
+    "images": "walk",
+    "anchor": [
+      0,
+      6
+    ],
+    "act_num": 5,
+    "need_move": true,
+    "direction": "left",
+    "frame_move": 4,
+    "frame_refresh": 0.1
+  },
+  "walk_right": {
+    "images": "walk_right",
+    "anchor": [
+      0,
+      6
+    ],
+    "act_num": 5,
+    "need_move": true,
+    "direction": "right",
+    "frame_move": 4,
+    "frame_refresh": 0.1
+  }
+}

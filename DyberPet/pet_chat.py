@@ -1,6 +1,6 @@
 """桌宠对话窗口 + 语音播报(TTS) + 语音输入(STT)。
 
-- 对话：复用 ``DyberPet.lol_companion.Caster`` 与本地 Ollama（带多轮记忆）。
+- 对话：复用 ``DyberPet.llm_core.Caster`` 与本地 Ollama（带多轮记忆）。
 - 语音播报：edge-tts（微软在线，中文自然，需联网）。
 - 语音输入：vosk 离线中文模型（避免 Google STT 被墙），首次使用自动下载。
 
@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (QWidget, QListWidget, QLineEdit, QPushButton,
 from PySide6.QtGui import QTextCursor
 
 import DyberPet.settings as settings
-from DyberPet.lol_companion import Caster, COMPANION_PROMPT, sanitize_commentary
+from DyberPet.llm_core import Caster, COMPANION_PROMPT, sanitize_commentary
 
 logger = logging.getLogger(__name__)
 
@@ -327,7 +327,7 @@ class ChatManager(QObject):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.caster = Caster(model=settings.chat_model or settings.lol_companion_model)
+        self.caster = Caster(model=settings.chat_model or settings.plugins_settings.get('lol_companion', {}).get('model'))
         self.window = PetChatWindow(self)
         self.history = []  # (user, assistant)
         self._chat_thread = None
@@ -426,7 +426,7 @@ class ChatManager(QObject):
         v = settings.chat_voice
         if v in VOICE_OPTIONS:
             return VOICE_OPTIONS[v]
-        style = settings.lol_companion_style
+        style = settings.plugins_settings.get('lol_companion', {}).get('style', '肥牛')
         default = STYLE_DEFAULT_VOICE.get(style, "云希(男·活力)")
         return VOICE_OPTIONS.get(default, "zh-CN-YunxiNeural")
 

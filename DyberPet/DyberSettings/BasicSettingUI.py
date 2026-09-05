@@ -16,7 +16,7 @@ from PySide6.QtWidgets import QWidget, QLabel, QApplication
 
 from .custom_utils import Dyber_RangeSettingCard, Dyber_ComboBoxSettingCard, CustomColorSettingCard
 import DyberPet.settings as settings
-from DyberPet.lol_companion import list_ollama_models
+from DyberPet.llm_core import list_ollama_models
 
 # 推荐模型列表（Ollama 不可达时的兜底选项 + 常见小模型）
 # 仅保留确定存在 / 已在本机验证过的模型标签，避免给不存在的 tag 当推荐
@@ -207,72 +207,8 @@ class SettingInterface(ScrollArea):
         )
         self.themeColorCard.colorChanged.connect(self.colorChanged)
 
-        # LoL Companion ==============================================================================
-        self.CompanionGroup = SettingCardGroup(self.tr('LoL Companion'), self.scrollWidget)
-        self.CompanionEnableCard = SwitchSettingCard(
-            FIF.GAME,
-            self.tr("Enable Game Companion"),
-            self.tr("When turned on, Paimon will commentate your League of Legends matches"),
-            parent=self.CompanionGroup
-        )
-        if settings.lol_companion_enabled:
-            self.CompanionEnableCard.setChecked(True)
-        else:
-            self.CompanionEnableCard.setChecked(False)
-        self.CompanionEnableCard.switchButton.checkedChanged.connect(self._CompanionEnableChanged)
-
-        self.CompanionModelCard = Dyber_ComboBoxSettingCard(
-            RECOMMENDED_MODELS, RECOMMENDED_MODELS,
-            FIF.ROBOT,
-            self.tr('Commentary Model'),
-            self.tr('Local Ollama model used to generate real-time commentary'),
-            parent=self.CompanionGroup
-        )
-        self.CompanionModelCard.comboBox.setCurrentText(settings.lol_companion_model)
-        self.CompanionModelCard.comboBox.currentTextChanged.connect(self._CompanionModelChanged)
-
-        self.CompanionRefreshCard = PushSettingCard(
-            self.tr('Refresh'), FIF.SYNC,
-            self.tr('Model List'),
-            self.tr('Click to scan locally pulled Ollama models'),
-            parent=self.CompanionGroup
-        )
-        self.CompanionRefreshCard.button.clicked.connect(self._refresh_models_async)
-
-        self.CompanionStyleCard = Dyber_ComboBoxSettingCard(
-            ["肥牛", "电竞主播", "温柔吐槽", "暴躁老哥"],
-            ["肥牛", "电竞主播", "温柔吐槽", "暴躁老哥"],
-            FIF.EMOJI_TAB_SYMBOLS,
-            self.tr('Commentary Style'),
-            self.tr('Personality of the AI commentary'),
-            parent=self.CompanionGroup
-        )
-        self.CompanionStyleCard.comboBox.setCurrentText(settings.lol_companion_style)
-        self.CompanionStyleCard.comboBox.currentTextChanged.connect(self._CompanionStyleChanged)
-
-        self.CompanionReactionCard = SwitchSettingCard(
-            FIF.MOVIE,
-            self.tr("Emotion Reactions"),
-            self.tr("When turned on, Paimon will bounce/shake/scale according to the situation"),
-            parent=self.CompanionGroup
-        )
-        if settings.lol_companion_reactions:
-            self.CompanionReactionCard.setChecked(True)
-        else:
-            self.CompanionReactionCard.setChecked(False)
-        self.CompanionReactionCard.switchButton.checkedChanged.connect(self._CompanionReactionChanged)
-
-        self.CompanionBubbleCard = SwitchSettingCard(
-            QIcon(os.path.join(basedir, 'res/icons/system/bubble.svg')),
-            self.tr("Commentary Bubble"),
-            self.tr("When turned on, commentary text will pop-up above the pet"),
-            parent=self.CompanionGroup
-        )
-        if settings.lol_companion_bubble:
-            self.CompanionBubbleCard.setChecked(True)
-        else:
-            self.CompanionBubbleCard.setChecked(False)
-        self.CompanionBubbleCard.switchButton.checkedChanged.connect(self._CompanionBubbleChanged)
+        # 注意：LoL Companion 插件设置已迁移到「插件中心」（DyberPet/DyberSettings/PluginCenterUI.py），
+        # 不再出现在「基本设置」中。
 
         # Chat (对话) ==============================================================================
         self.ChatGroup = SettingCardGroup(self.tr('Chat'), self.scrollWidget)
@@ -339,8 +275,49 @@ class SettingInterface(ScrollArea):
         self.ChatGroup.addSettingCard(self.ChatVoiceCard)
         self.expandLayout.addWidget(self.ChatGroup)
 
+        # Day/Night mode (借鉴官方 v0.8.10 昼夜模式) ========================================
+        self.DayNightGroup = SettingCardGroup(self.tr('Day/Night Mode'), self.scrollWidget)
+        self.DayNightCard = SwitchSettingCard(
+            QIcon(os.path.join(basedir, 'res/icons/system/sun.svg')) if os.path.isfile(
+                os.path.join(basedir, 'res/icons/system/sun.svg')) else FIF.CALENDAR,
+            self.tr('Day/Night Mode'),
+            self.tr('Pet sleeps automatically at night and wakes up in the morning'),
+            parent=self.DayNightGroup
+        )
+        self.DayNightCard.setChecked(bool(getattr(settings, 'day_night_on', False)))
+        self.DayNightCard.switchButton.checkedChanged.connect(self._DayNightChanged)
+
+        _time_opts = [f'{h:02d}:{m:02d}' for h in range(24) for m in (0, 30)]
+        self.DayStartCard = Dyber_ComboBoxSettingCard(
+            _time_opts, _time_opts,
+            QIcon(os.path.join(basedir, 'res/icons/system/sun.svg')) if os.path.isfile(
+                os.path.join(basedir, 'res/icons/system/sun.svg')) else FIF.CALENDAR,
+            self.tr('Wake-up Time'),
+            self.tr('Day starts at'),
+            parent=self.DayNightGroup
+        )
+        if getattr(settings, 'day_start', '08:00') in _time_opts:
+            self.DayStartCard.comboBox.setCurrentText(settings.day_start)
+        self.DayStartCard.comboBox.currentTextChanged.connect(self._DayStartChanged)
+
+        self.NightStartCard = Dyber_ComboBoxSettingCard(
+            _time_opts, _time_opts,
+            QIcon(os.path.join(basedir, 'res/icons/system/moon.svg')) if os.path.isfile(
+                os.path.join(basedir, 'res/icons/system/moon.svg')) else FIF.CALENDAR,
+            self.tr('Bedtime'),
+            self.tr('Night starts at'),
+            parent=self.DayNightGroup
+        )
+        if getattr(settings, 'night_start', '23:00') in _time_opts:
+            self.NightStartCard.comboBox.setCurrentText(settings.night_start)
+        self.NightStartCard.comboBox.currentTextChanged.connect(self._NightStartChanged)
+
+        self.DayNightGroup.addSettingCard(self.DayNightCard)
+        self.DayNightGroup.addSettingCard(self.DayStartCard)
+        self.DayNightGroup.addSettingCard(self.NightStartCard)
+        self.expandLayout.addWidget(self.DayNightGroup)
+
         # 确保当前设置值存在于下拉框（即便不在推荐列表里）
-        self._populate_combo(self.CompanionModelCard, RECOMMENDED_MODELS, settings.lol_companion_model)
         self._populate_combo(self.ChatModelCard, RECOMMENDED_MODELS, settings.chat_model)
 
         # About ==============================================================================
@@ -410,13 +387,6 @@ class SettingInterface(ScrollArea):
         self.PersonalGroup.addSettingCard(self.languageCard)
         self.PersonalGroup.addSettingCard(self.themeColorCard)
 
-        self.CompanionGroup.addSettingCard(self.CompanionEnableCard)
-        self.CompanionGroup.addSettingCard(self.CompanionModelCard)
-        self.CompanionGroup.addSettingCard(self.CompanionRefreshCard)
-        self.CompanionGroup.addSettingCard(self.CompanionStyleCard)
-        self.CompanionGroup.addSettingCard(self.CompanionReactionCard)
-        self.CompanionGroup.addSettingCard(self.CompanionBubbleCard)
-
         self.aboutGroup.addSettingCard(self.aboutCard)
         self.aboutGroup.addSettingCard(self.helpCard)
         self.aboutGroup.addSettingCard(self.devCard)
@@ -429,7 +399,6 @@ class SettingInterface(ScrollArea):
         self.expandLayout.addWidget(self.InteractionGroup)
         self.expandLayout.addWidget(self.VolumnGroup)
         self.expandLayout.addWidget(self.PersonalGroup)
-        self.expandLayout.addWidget(self.CompanionGroup)
         self.expandLayout.addWidget(self.aboutGroup)
 
     def __setQss(self):
@@ -508,6 +477,18 @@ class SettingInterface(ScrollArea):
             parent=self.window()
         )
 
+    def _DayNightChanged(self, checked):
+        settings.day_night_on = bool(checked)
+        settings.save_settings()
+
+    def _DayStartChanged(self, text):
+        settings.day_start = text
+        settings.save_settings()
+
+    def _NightStartChanged(self, text):
+        settings.night_start = text
+        settings.save_settings()
+
     def colorChanged(self, color_str):
         setThemeColor(color_str)
         settings.themeColor = color_str
@@ -530,26 +511,6 @@ class SettingInterface(ScrollArea):
             settings.bubble_on = True
         else:
             settings.bubble_on = False
-        settings.save_settings()
-
-    def _CompanionEnableChanged(self, isChecked):
-        settings.lol_companion_enabled = bool(isChecked)
-        settings.save_settings()
-
-    def _CompanionModelChanged(self, value):
-        settings.lol_companion_model = value
-        settings.save_settings()
-
-    def _CompanionStyleChanged(self, value):
-        settings.lol_companion_style = value
-        settings.save_settings()
-
-    def _CompanionReactionChanged(self, isChecked):
-        settings.lol_companion_reactions = bool(isChecked)
-        settings.save_settings()
-
-    def _CompanionBubbleChanged(self, isChecked):
-        settings.lol_companion_bubble = bool(isChecked)
         settings.save_settings()
 
     def _ChatTtsChanged(self, isChecked):
@@ -605,33 +566,6 @@ class SettingInterface(ScrollArea):
         idx = combo.findText(current_value) if current_value else -1
         combo.setCurrentIndex(idx if idx >= 0 else 0)
         combo.blockSignals(False)
-
-    def _refresh_models_async(self):
-        """异步扫描本机已拉取的 Ollama 模型，更新解说/聊天两个下拉框。"""
-        class ModelFetchThread(QThread):
-            result = Signal(list)
-            def run(self):
-                try:
-                    self.result.emit(list_ollama_models())
-                except Exception:  # noqa: BLE001
-                    self.result.emit([])
-        self._model_fetch = ModelFetchThread()
-        self._model_fetch.result.connect(self._on_models_fetched)
-        self._model_fetch.start()
-
-    def _on_models_fetched(self, models):
-        if not models:
-            InfoBar.warning(
-                '', self.tr('No Ollama models found / Ollama not running'),
-                duration=3000, position=InfoBarPosition.BOTTOM, parent=self.window())
-            return
-        # 已安装模型在最前，兜底推荐项排后，去重保序
-        merged = list(dict.fromkeys(models + RECOMMENDED_MODELS))
-        self._populate_combo(self.CompanionModelCard, merged, settings.lol_companion_model)
-        self._populate_combo(self.ChatModelCard, merged, settings.chat_model)
-        InfoBar.success(
-            '', self.tr(f'Found {len(models)} local model(s)'),
-            duration=2000, position=InfoBarPosition.BOTTOM, parent=self.window())
 
 
 def get_latest_version():

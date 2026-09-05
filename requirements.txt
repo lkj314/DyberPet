@@ -19,7 +19,7 @@ tendo==0.3.0
 requests==2.34.2            # LoL Companion: LCU 2999 轮询 + 本机 Ollama 解说调用
 
 # ---- 对话窗口 / 语音 ----
-edge-tts==7.2.8              # 语音播报 TTS（微软在线，中文自然，需联网）
+edge-tts==7.2.8              # 语音播报 TTS（微软在线，中文自然，需联网；底层走 aiohttp，非 httpx）
 vosk==0.3.45                 # 离线语音识别（中文小模型，避免 Google STT 被墙）
 pyaudio==0.2.14              # 麦克风采集（Windows wheel 自带 portaudio）
 

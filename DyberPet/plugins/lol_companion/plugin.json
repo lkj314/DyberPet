@@ -1,0 +1,96 @@
+{
+  "id": "lol_companion",
+  "name": "LoL Companion",
+  "version": "2.0.0",
+  "author": "DyberPet",
+  "description": "LoL 全能陪玩：实时解说（Ollama）、对局结束自动统计全队 KDA 并按修仙境界判档生成战报（气泡+通知栏，胜利联动修为）、自动接受对局/自动点赞/自动返回房间（LCU 客户端 API）。",
+  "entry": "main:LoLCompanionPlugin",
+  "min_app_version": "0.6.7",
+  "permissions": ["pet.bubble", "pet.react", "net.localhost", "net.ollama", "net.lcu"],
+  "settings_schema": [
+    {
+      "key": "enabled",
+      "type": "switch",
+      "default": true,
+      "label": "Enable Game Companion",
+      "description": "When turned on, Paimon will commentate your League of Legends matches",
+      "icon": "GAME"
+    },
+    {
+      "key": "model",
+      "type": "combo",
+      "default": "gemma3:4b",
+      "label": "Commentary Model",
+      "description": "Local Ollama model used to generate real-time commentary",
+      "options_ref": "ollama_models",
+      "icon": "ROBOT"
+    },
+    {
+      "key": "style",
+      "type": "combo",
+      "default": "肥牛",
+      "label": "Commentary Style",
+      "description": "Personality of the AI commentary",
+      "options": ["肥牛", "电竞主播", "温柔吐槽", "暴躁老哥"],
+      "icon": "EMOJI_TAB_SYMBOLS"
+    },
+    {
+      "key": "reactions",
+      "type": "switch",
+      "default": true,
+      "label": "Emotion Reactions",
+      "description": "When turned on, Paimon will bounce/shake/scale according to the situation",
+      "icon": "MOVIE"
+    },
+    {
+      "key": "bubble",
+      "type": "switch",
+      "default": true,
+      "label": "Commentary Bubble",
+      "description": "When turned on, commentary text will pop-up above the pet",
+      "icon": "res/icons/system/bubble.svg"
+    },
+    {
+      "key": "battle_report",
+      "type": "switch",
+      "default": true,
+      "label": "Battle Report",
+      "description": "At end of game, count every player's KDA, assign cultivation realms (Qi Refining to Spirit Transformation), and pop up the report (bubble + notification, text only)",
+      "icon": "BOOK"
+    },
+    {
+      "key": "exp_reward",
+      "type": "slider",
+      "min": 0,
+      "max": 1000,
+      "default": 300,
+      "label": "Win EXP Reward",
+      "description": "Cultivation EXP granted when the pet's master wins a match (0 disables)",
+      "icon": "LiGHTNING"
+    },
+    {
+      "key": "auto_accept",
+      "type": "switch",
+      "default": true,
+      "label": "Auto Accept Match",
+      "description": "Automatically accept the match when the ready-check pops up",
+      "icon": "CHECK"
+    },
+    {
+      "key": "auto_honor",
+      "type": "switch",
+      "default": true,
+      "label": "Auto Honor Teammate",
+      "description": "Automatically honor the best-performing teammate after each game",
+      "icon": "HEART"
+    },
+    {
+      "key": "auto_play_again",
+      "type": "switch",
+      "default": true,
+      "label": "Auto Back to Lobby",
+      "description": "Automatically return to the lobby a few seconds after the game ends",
+      "icon": "HOME"
+    }
+  ]
+}

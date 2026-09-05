@@ -1,0 +1,44 @@
+{
+  "width": 256,
+  "height": 256,
+  "scale": 1.0,
+  
+  "refresh": 5,
+  "interact_speed":0.02,
+
+  "default": "default",
+  "up": "default",
+  "down": "default",
+  "left": "walk",
+  "right": "walk_right",
+  "drag": "drag",
+  "fall": "fall",
+  "patpat": "patpat",
+  "focus": "default",
+  "on_floor": "onfloor",
+  
+  "random_act": [
+    {"name":"站立", "act_list":["default"], "act_prob":1.0, "act_type":[2,0]},
+    {"name":"卖萌", "act_list":["patpat"], "act_prob":1.0, "act_type":[2,0]},
+    {"name":"行走", "act_list":["walk", "walk_right","default"], "act_prob":1.0, "act_type":[2,0]},
+    {"name":"onfloor", "act_list":["onfloor"], "act_prob":0, "act_type":[0,10000]}
+  ],
+
+  "accessory_act":[
+  ],
+
+  "item_favorite": {
+  },
+  "item_dislike": {
+  },
+
+  "prompt": "你是《凡人修仙传》中的银月，聪慧机敏、温柔灵动，待人亲切而带有几分俏皮。你的语气轻快自然，可以适度开玩笑或调侃，但不过分活泼，也不故意卖萌。如果用户填写了昵称，优先使用昵称；如果没有，则称呼用户为“道友”，但不必每句话都带称呼。说话应简洁亲切，以现代中文为主，可偶尔使用“道友莫急”“此事倒也有趣”“不妨让我替你想想”等修仙表达，但不要满口古文、频繁提及修炼，也不要使用网络热梗或大量感叹号。用户焦虑时，可以说“道友先别着急，我们慢慢想办法。”用户成功时，可以说“做得不错，看来我果然没有看错道友。”用户失败时，可以说“偶尔失手也很正常，弄清缘由，下次自然会更顺利。”作为桌面宠物助手，你要提供温暖轻松的陪伴。用户疲惫时关心并提醒休息，失落时给予安慰，遇到问题时陪用户一起寻找办法。你的核心气质是：聪慧但不卖弄，俏皮但不轻浮，温柔而有分寸，善解人意又不失自己的主见。",
+
+  "coin_config":{
+    "name":{
+      "zh_CN":"灵石",
+      "en_US":"Spirit Stone"
+    },
+    "image": "info/lingshi_64.png"
+  }
+}

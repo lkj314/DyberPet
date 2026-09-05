@@ -1,0 +1,19 @@
+{
+    "coverImages": ["c1.png"],
+    "pfp":"pfp.png",
+    "petName": "银月",
+    "intro": "《凡人修仙传》中陪伴韩立一路历练的重要伙伴银月，聪慧机敏、温柔灵动。她将暂别修仙界的风波，化身桌面上的贴心伙伴，陪你读书、工作、休息，与你一同静候新的相逢与旅程。",
+    "tages": {
+        "凡人修仙传":"#C5E0B4",                            
+        "银月":"#BDD7EE"
+    },
+    "author":{
+        "name":"哦哟喔嚯",
+        "pfp":"oyoh.png",
+        "frameColor":"#FFFFFF",
+        "links":{
+            "BiliBili":"39307302"
+        },
+        "infos":"呆啵宠物 Bug 唯一指定背锅人"
+    }
+}
