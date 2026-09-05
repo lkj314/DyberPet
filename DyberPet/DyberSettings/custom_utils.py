@@ -607,9 +607,9 @@ class QuickSaveCard(SimpleCardWidget):
         hBoxLayout2.setSpacing(5)
         hBoxLayout2.setContentsMargins(15, 5, 15, 5)
         hBoxLayout2.addStretch(1)
-        hBoxLayout2.addWidget(self.pfpLabel, Qt.AlignCenter)
+        hBoxLayout2.addWidget(self.pfpLabel, 0, Qt.AlignCenter)
         hBoxLayout2.addStretch(1)
-        hBoxLayout2.addLayout(vBoxLayout_status, Qt.AlignCenter)
+        hBoxLayout2.addLayout(vBoxLayout_status)
         hBoxLayout2.addStretch(1)
 
         # Assemble card
@@ -1248,8 +1248,8 @@ class CharCardWidget(SimpleCardWidget):
         setFont(self.contentLabel, 13) #, QFont.DemiBold)
         self.contentLabel.adjustSize()
 
-        self.vBoxLayout2.addLayout(self.hBoxLayoutTitle, Qt.AlignLeft)
-        self.vBoxLayout2.addLayout(self.hBoxLayoutTags, Qt.AlignLeft)
+        self.vBoxLayout2.addLayout(self.hBoxLayoutTitle)
+        self.vBoxLayout2.addLayout(self.hBoxLayoutTags)
         self.vBoxLayout2.addWidget(self.contentLabel, 0, Qt.AlignLeft)
         self.vBoxLayout2.addStretch(1)
         
@@ -1300,9 +1300,9 @@ class CharCardWidget(SimpleCardWidget):
         self.vBoxLayout.addWidget(self.flipView, 0, Qt.AlignCenter)
         self.vBoxLayout.addWidget(self.pager, 0, Qt.AlignCenter)
 
-        self.vBoxLayout.addLayout(self.vBoxLayout2, Qt.AlignCenter)
+        self.vBoxLayout.addLayout(self.vBoxLayout2)
         self.vBoxLayout.addWidget(HorizontalSeparator(QColor("#000000")))
-        self.vBoxLayout.addLayout(self.hBoxLayoutAuthor, Qt.AlignCenter)
+        self.vBoxLayout.addLayout(self.hBoxLayoutAuthor)
         self.vBoxLayout.addStretch(1)
         #self.vBoxLayout.addWidget(self.saveButton, 0, Qt.AlignCenter)
         #self.vBoxLayout.addStretch(1)
@@ -1638,8 +1638,8 @@ class ItemCardWidget(SimpleCardWidget):
         setFont(self.contentLabel, 13) #, QFont.DemiBold)
         self.contentLabel.adjustSize()
 
-        self.vBoxLayout2.addLayout(self.hBoxLayoutTitle, Qt.AlignLeft)
-        self.vBoxLayout2.addLayout(self.hBoxLayoutTags, Qt.AlignLeft)
+        self.vBoxLayout2.addLayout(self.hBoxLayoutTitle)
+        self.vBoxLayout2.addLayout(self.hBoxLayoutTags)
         self.vBoxLayout2.addWidget(self.contentLabel, 0, Qt.AlignLeft)
         self.vBoxLayout2.addStretch(1)
         
@@ -1691,9 +1691,9 @@ class ItemCardWidget(SimpleCardWidget):
         self.vBoxLayout.addWidget(self.scrollView, 0, Qt.AlignCenter)
         #self.vBoxLayout.addWidget(self.pager, 0, Qt.AlignCenter)
 
-        self.vBoxLayout.addLayout(self.vBoxLayout2, Qt.AlignCenter)
+        self.vBoxLayout.addLayout(self.vBoxLayout2)
         self.vBoxLayout.addWidget(HorizontalSeparator(QColor("#000000")))
-        self.vBoxLayout.addLayout(self.hBoxLayoutAuthor, Qt.AlignCenter)
+        self.vBoxLayout.addLayout(self.hBoxLayoutAuthor)
         self.vBoxLayout.addStretch(1)
         #self.vBoxLayout.addWidget(self.saveButton, 0, Qt.AlignCenter)
         #self.vBoxLayout.addStretch(1)

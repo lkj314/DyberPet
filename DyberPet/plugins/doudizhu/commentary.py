@@ -19,7 +19,7 @@ import urllib.request
 from collections import Counter
 from typing import Callable, Optional, Tuple
 
-from DyberPet.llm_core import DEFAULT_OLLAMA_BASE
+from DyberPet.llm_core import DEFAULT_OLLAMA_BASE, list_ollama_models
 from .card_rules import RANK_STR, card_rank
 
 # ------------------------------------------------------------------ #
@@ -96,11 +96,15 @@ _EVENT_VOICE = {
 class Commentator:
     def __init__(self, taunt: bool = True, use_llm: bool = False,
                  model: str = 'qwen2.5:7b',
-                 ollama_base: str = DEFAULT_OLLAMA_BASE):
+                 ollama_base: str = DEFAULT_OLLAMA_BASE,
+                 fallback_models: Optional[list] = None):
         self.taunt = taunt
         self.use_llm = use_llm          # 只用于军师
         self.model = model
         self.ollama_base = ollama_base
+        # 模型兜底链：配置的模型未安装时按序降级到本机已装模型
+        # （如主程序的 chat_model），避免「模型不存在 → 军师永远失声」
+        self.fallback_models = [m for m in (fallback_models or []) if m]
 
     # ------------------------------------------------------------------ #
     def on_event(self, event: str) -> Tuple[Optional[str], str]:
@@ -150,9 +154,14 @@ class Commentator:
 
         threading.Thread(target=_run, daemon=True).start()
 
+    # 座位名（与 ui.py SEAT_NAME 一致）：军师必须用名字称呼牌桌上的人
+    SEAT_NAME = {0: '你', 1: '肥牛', 2: '路人甲'}
+
     @staticmethod
-    def build_brief(view: dict) -> str:
-        """确定性记牌（只用玩家的合法信息：自己手牌 + 公开出牌历史）。"""
+    def build_brief(view: dict, candidates: Optional[str] = None) -> str:
+        """确定性记牌（只用玩家的合法信息：自己手牌 + 公开出牌历史）。
+        candidates: 本地引擎算出的可出候选（中文描述，已截断）——军师的算牌地基。
+        """
         played = Counter(card_rank(c) for c in view.get('played_cards', []))
         mine = Counter(card_rank(c) for c in view['my_cards'])
         full = Counter({r: 4 for r in range(13)})
@@ -160,57 +169,143 @@ class Commentator:
         full[14] = 1
         unseen = full - played - mine          # 未露面的牌（在两个 AI 手里）
 
+        # gone：外面一张不剩的牌（若全在我手里则不算"出完了"）
         gone = [RANK_STR[r] for r in range(15)
-                if full[r] > 0 and unseen[r] == 0]
+                if full[r] > 0 and unseen[r] == 0 and mine[r] < full[r]]
         hidden_big = [RANK_STR[r] for r in (13, 14, 12, 11) if unseen[r] > 0]
         bombs_alive = [RANK_STR[r] for r in range(13) if unseen[r] == 4]
 
-        parts = []
+        names = Commentator.SEAT_NAME
+        seat = view.get('seat', 0)
+        landlord = view.get('landlord')
         role = view.get('role') or 'farmer'
-        parts.append(f"你是{'地主' if role == 'landlord' else '农民'}")
+
+        parts = []
+        if landlord is not None and landlord == seat:
+            parts.append('本局你是地主')
+        elif landlord is not None and landlord in names:
+            parts.append(f'本局地主是{names[landlord]}')
+            parts.append('你是农民')
+        else:
+            parts.append(f"你是{'地主' if role == 'landlord' else '农民'}")
         parts.append(f"你手里还有{view['my_count']}张")
+
         rem = view.get('remaining', {})
-        names = {s: ('桌宠' if s == 1 else '路人甲') for s in rem}
-        parts.append('、'.join(f"{names[s]}剩{v}张" for s, v in rem.items()))
+        danger = []
+        for s, v in rem.items():
+            who = names.get(s, f'座位{s}')
+            rl = '地主' if s == landlord else '农民'
+            if role != 'landlord' and s != landlord:
+                parts.append(f"{who}(你的队友，{rl})剩{v}张")
+            else:
+                parts.append(f"{who}({rl})剩{v}张")
+            if v <= 2 and (role == 'landlord' or s == landlord):
+                # 只警告对手快跑完：农民局防地主，地主局防两个农民
+                # （队友快跑完是好事，不算威胁）
+                danger.append(f"{who}({rl})")
+
+        # 自己手里的重火力（让军师知道玩家还能不能反打）
+        firepower = []
+        if mine[13] and mine[14]:
+            firepower.append('双王在手')
+        else:
+            if mine[14]:
+                firepower.append('大王在手')
+            if mine[13]:
+                firepower.append('小王在手')
+        for r in range(13):
+            if mine[r] == 4:
+                firepower.append(f"{RANK_STR[r]}炸弹在手")
+        twos = mine[12]
+        if twos:
+            firepower.append(f"{twos}张2")
+        if firepower:
+            parts.append('你手里' + '、'.join(firepower))
+
         if gone:
             parts.append(f"这些牌已经出完了：{'、'.join(gone[:10])}")
         if hidden_big:
             parts.append(f"大牌还没露面：{'、'.join(hidden_big)}")
         if bombs_alive:
-            parts.append(f"警惕！{'、'.join(bombs_alive)}的炸弹还可能没炸")
+            if len(bombs_alive) <= 4:
+                parts.append(f"警惕！{'、'.join(bombs_alive)}的炸弹还可能没炸")
+            else:
+                parts.append(f"还有{len(bombs_alive)}个点数可能凑成炸弹，留意")
+        if danger:
+            parts.append(f"{'、'.join(danger)}快跑完了，优先压制")
+        if candidates:
+            parts.append(f"你手里可以出的（从优到劣）：{candidates}")
         return '；'.join(parts) + '。'
 
-    def request_advisor(self, brief: str, callback: Callable[[str], None]):
-        """后台线程让 Ollama 把简报说成狗头军师口吻；成功 callback(text)。"""
-        if not self.use_llm:
-            return
+    def request_advisor(self, brief: str,
+                        callback: "Callable[[Optional[str], str], None]"):
+        """后台线程让 Ollama 把简报说成狗头军师口吻。
+        无论成功/失败/超时/空回复都会回调：
+        callback(文本, '') 成功；callback(None, 失败原因) 失败。
+        （此前失败静默不回调，UI 会永久卡在「军师在想…」——已修）
+        模型自动降级：配置模型未安装时落到本机已装模型（见 _pick_model）。
+        """
         system = (
-            '你是斗地主里的狗头军师「肥牛」，帮玩家分析局势出主意。'
-            '根据给你的记牌简报，用一句不超过40字的口语化中文给出建议，'
+            '你是斗地主牌桌旁的狗头军师，帮玩家分析局势出主意。'
+            '牌桌上另有两个 AI：「肥牛」和「路人甲」。称呼铁律（必须遵守）：'
+            '① 提玩家一律用「你」，严禁用数字或代号（如玩家1、1号）；'
+            '② 提桌上 AI 必须叫名字并带身份，如「肥牛(地主)」「路人甲(农民)」、'
+            '农民局里提队友说「你的队友肥牛」。'
+            '根据记牌简报，用一句不超过40字的口语化中文给建议：'
+            '点出关键威胁（谁快跑完了、什么炸弹没露面），'
+            '建议出什么牌（可从给的候选里选）或该压谁。'
             '语气俏皮自信、像老牌友支招，直接说内容不要引号。'
         )
         user = f"记牌简报：{brief}"
 
         def _run():
+            # 先探活 + 拿已装模型列表（复用 llm_core 的禁代理会话）
+            installed = list_ollama_models(self.ollama_base)
+            if not installed:
+                callback(None, '连不上 Ollama——请确认 Ollama 正在运行')
+                return
+            model = self._pick_model(installed)
             try:
-                text = self._generate(system, user)
-                if text:
-                    callback(text.strip())
-            except Exception:  # noqa: BLE001
-                pass
+                text = self._generate(system, user, model)
+                callback(text.strip() if text else None,
+                         '' if text else 'Ollama 返回了空回复，换个模型试试')
+            except Exception as e:  # noqa: BLE001
+                code = getattr(e, 'code', None)
+                if code == 404:
+                    callback(None, f'模型 {model} 未安装（Ollama 里没有）')
+                else:
+                    callback(None, f'Ollama 请求失败：{e}')
 
         threading.Thread(target=_run, daemon=True).start()
 
-    def _generate(self, system: str, user: str) -> Optional[str]:
+    def _pick_model(self, installed: list) -> str:
+        """配置模型不在已装列表时按兜底链自动降级，返回实际使用的模型名。"""
+        if self.model in installed:
+            return self.model
+        for cand in self.fallback_models:
+            if cand in installed:
+                return cand
+        # 最后兜底：挑第一个常规生成模型（排除 embed/vl 等特殊用途）
+        for name in installed:
+            if not any(x in name for x in ('embed', 'bge', 'vl', 'nomic',
+                                           'whisper')):
+                return name
+        return self.model
+
+    def _generate(self, system: str, user: str,
+                  model: Optional[str] = None) -> Optional[str]:
         url = f"{self.ollama_base.rstrip('/')}/api/generate"
         payload = json.dumps({
-            'model': self.model,
+            'model': model or self.model,
             'system': system,
             'prompt': user,
             'stream': False,
         }).encode('utf-8')
         req = urllib.request.Request(
             url, data=payload, headers={'Content-Type': 'application/json'})
-        with urllib.request.urlopen(req, timeout=30) as resp:
+        # 禁代理：http_proxy 环境变量会把 127.0.0.1:11434 的请求发给代理，
+        # 代理连不上本机 Ollama 就挂到 30s 超时——军师「想很久」的真凶之一
+        opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+        with opener.open(req, timeout=30) as resp:
             data = json.loads(resp.read().decode('utf-8'))
         return data.get('response')

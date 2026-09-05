@@ -66,6 +66,32 @@ class Move:
         return cards_label(self.cards)
 
 
+# 牌型中文名（move_desc 军师简报用）
+_PTYPE_CN = {
+    'single': '单', 'pair': '对', 'triple': '三个', 'triple1': '三带一',
+    'triple2': '三带二', 'straight': '顺子', 'pair_seq': '连对',
+    'plane': '飞机', 'plane1': '飞机带单', 'plane2': '飞机带对',
+    'four2': '四带二', 'four2pair': '四带两对', 'bomb': '炸弹', 'rocket': '王炸',
+}
+
+
+def move_desc(m: Move) -> str:
+    """Move → 简短中文描述（军师简报用）：单K、对5、三带一(8)、顺子(3到7)。"""
+    if m.ptype == 'rocket':
+        return '王炸'
+    if m.ptype == 'bomb':
+        return f'炸弹({RANK_STR[m.rank]})'
+    if m.ptype == 'straight':
+        return f"顺子({RANK_STR[m.rank]}到{RANK_STR[m.rank + m.length - 1]})"
+    if m.ptype == 'pair_seq':
+        return f"连对({RANK_STR[m.rank]}到{RANK_STR[m.rank + m.length - 1]})"
+    if m.ptype in ('plane', 'plane1', 'plane2'):
+        return f"飞机({RANK_STR[m.rank]}起{m.length}组)"
+    if m.ptype in ('triple1', 'triple2', 'four2', 'four2pair'):
+        return f"{_PTYPE_CN[m.ptype]}({RANK_STR[m.rank]})"
+    return f"{_PTYPE_CN.get(m.ptype, m.ptype)}{RANK_STR[m.rank]}"
+
+
 def detect_move(cards) -> Optional[Move]:
     """把一组牌解析成 Move；非法牌型返回 None。"""
     n = len(cards)

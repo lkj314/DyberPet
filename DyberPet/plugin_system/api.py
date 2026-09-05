@@ -137,19 +137,40 @@ class _PetFacade(QObject):
         except Exception as e:  # noqa: BLE001
             print(f'[api] open_adventure failed: {e!r}')
 
+    def open_world(self):
+        """打开角色面板的「修仙世界」页（世界日志/奇遇请示入口）。"""
+        try:
+            self._w.show_world_page.emit()
+        except Exception as e:  # noqa: BLE001
+            print(f'[api] open_world failed: {e!r}')
+
     def hide_pet(self):
-        """隐藏桌宠本体（外出历练离场）。异常绝不吞进程，仅打印。"""
+        """隐藏桌宠本体（外出历练离场）。异常绝不吞进程，仅打印。
+
+        同时让所有已打开的迷你宠物进入留守模式：停止跟随与随机动作、
+        固定到桌面右下角只播待机动画，并解锁拖动。
+        """
         try:
             self._w.hide()
         except Exception as e:  # noqa: BLE001
             print(f'[api] hide_pet failed: {e!r}')
+        try:
+            from DyberPet.Accessory import SUBPET_MANAGER
+            SUBPET_MANAGER.set_guard_mode(True)
+        except Exception as e:  # noqa: BLE001
+            print(f'[api] subpet guard-on failed: {e!r}')
 
     def show_pet(self):
-        """重新显示桌宠本体（历练归来/插件禁用兜底）。"""
+        """重新显示桌宠本体（历练归来/插件禁用兜底），并解除迷你宠物留守。"""
         try:
             self._w.show()
         except Exception as e:  # noqa: BLE001
             print(f'[api] show_pet failed: {e!r}')
+        try:
+            from DyberPet.Accessory import SUBPET_MANAGER
+            SUBPET_MANAGER.set_guard_mode(False)
+        except Exception as e:  # noqa: BLE001
+            print(f'[api] subpet guard-off failed: {e!r}')
 
     @staticmethod
     def _tts_log(msg):

@@ -1,0 +1,55 @@
+[
+  {"id": "ft_relic", "pool": "fortune", "weight": 12, "level": 1,
+   "effects": {"stones": [40, 260], "mood": [4, 14]},
+   "log": {
+     "low": ["{name}在{loc}刨地时挖出个旧储物袋，运气不错。",
+             "{name}拾获一件遗落法器，成色尚可，美滋滋收起。",
+             "{name}在河滩捡到块异石，找人一鉴，竟是天外陨铁。"],
+     "mid": ["{name}于{loc}古洞得前辈遗物，玉简丹方俱全。",
+             "{name}在{loc}枯井中发现一具坐化遗骸与随葬法宝。"],
+     "high": ["{name}机缘巧合得{item}一件，{realm}修为亦为之侧目。"]}},
+
+  {"id": "ft_secret_realm", "pool": "fortune", "weight": 5, "level": 2,
+   "effects": {"progress": [0.05, 0.12], "stones": [60, 300], "mood": [8, 20],
+               "flags": ["found_secret_realm"]},
+   "log": {
+     "low": ["{name}误打误撞闯进一处小秘境，捡了些灵草灵石出来。",
+             "{name}在{loc}发现一处前人洞府，得了些遗产。"],
+     "mid": ["{name}寻得上古秘境入口，满载而归，消息却走漏了。",
+             "{name}于{loc}得见秘境，机缘深厚，修为大涨。"],
+     "high": ["{name}推开{loc}界壁，于小千世界中证悟片刻。"]}},
+
+  {"id": "ft_master", "pool": "fortune", "weight": 6, "level": 1,
+   "effects": {"progress": [0.03, 0.08], "mood": [3, 10]},
+   "log": {
+     "low": ["{name}偶遇一位游方老修士，得了两句指点，茅塞顿开。",
+             "{name}帮一位老者挑了担水，对方随手传了手小法诀。"],
+     "mid": ["{name}得{person}倾囊指点，去了一处修为迷障。"],
+     "high": ["{name}与一位无名老道对坐半日，归来道心澄明。"]}},
+
+  {"id": "ft_alchemy_ok", "pool": "fortune", "weight": 7, "level": 1,
+   "effects": {"stones": [50, 240], "mood": [3, 10]},
+   "log": {
+     "low": ["{name}开炉炼丹，三炉成了两炉，手艺见长。",
+             "{name}炼出一炉养气丹，拿去坊市换了不少灵石。"],
+     "mid": ["{name}丹成异香满室，一炉上品丹药引得坊市竞价。"],
+     "high": ["{name}以{realm}真火炼丹，成丹率十成，丹界为之侧目。"]}},
+
+  {"id": "ft_alchemy_boom", "pool": "fortune", "weight": 6, "level": 1,
+   "effects": {"stones": [-120, -20], "health": [-0.08, 0.0], "mood": [-12, -2]},
+   "log": {
+     "low": ["{name}炼丹炸了炉，眉毛燎了一半，血亏。",
+             "{name}火候没掐准，一炉药材全喂了丹炉。",
+             "{name}的丹炉又炸了，邻里都听见了响。"],
+     "mid": ["{name}试炼新方炸炉，灵材尽毁，只叹手艺未精。"],
+     "high": ["{name}炼制{item}失败，雷劫反噬，狼狈不堪。"]}},
+
+  {"id": "ft_craft", "pool": "fortune", "weight": 6, "level": 1,
+   "effects": {"stones": [40, 220], "mood": [2, 10]},
+   "log": {
+     "low": ["{name}打制的一件小法器卖出了好价钱。",
+             "{name}替人修复了件旧法器，赚了顿酒钱。",
+             "{name}炼器时灵光一闪，成品质地竟超出预期。"],
+     "mid": ["{name}炼成{item}一件，器韵初成，坊市有人预付定金。"],
+     "high": ["{name}亲手炼成{item}，器灵初生，异象冲霄。"]}}
+]

@@ -357,6 +357,7 @@ class PetWidget(QWidget):
     fvlvl_changed_main_inve = Signal(int, name='fvlvl_changed_main_inve')
     touched = Signal(name='touched')  # 用户点击/抚摸桌宠（修仙系统抚慰加成等）
     show_adventure_page = Signal(name='show_adventure_page')  # 打开角色面板·历练页
+    show_world_page = Signal(name='show_world_page')  # 打开角色面板·修仙世界页
     hptier_changed_main_note = Signal(int, str, name='hptier_changed_main_note')
 
     setup_acc = Signal(dict, int, int, name='setup_acc')

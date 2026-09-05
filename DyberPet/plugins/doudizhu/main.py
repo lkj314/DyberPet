@@ -43,11 +43,20 @@ class DouDizhuPlugin(Plugin):
             self.window = None
 
         cfg = self.api.settings.all()
+        # 军师模型：优先插件设置 llm_model，未配置则用主程序 chat_model
+        # （用户已装且在用的模型）。qwen2.5:7b 硬编码兜底导致 404「军师
+        # 走神」——用户机器上往往没有这个模型（2026-09-05 实测教训）
+        try:
+            from DyberPet import settings as app_settings
+            chat_model = getattr(app_settings, 'chat_model', 'gemma3:4b')
+        except Exception:  # noqa: BLE001
+            chat_model = 'gemma3:4b'
         commentator = Commentator(
             taunt=bool(cfg.get('pet_taunt', True)),
             use_llm=bool(cfg.get('advisor', False)),
-            model=cfg.get('llm_model', 'qwen2.5:7b'),
+            model=cfg.get('llm_model') or chat_model,
             ollama_base=DEFAULT_OLLAMA_BASE,
+            fallback_models=[chat_model],
         )
         voices = VoiceBank(os.path.dirname(os.path.abspath(__file__)))
 

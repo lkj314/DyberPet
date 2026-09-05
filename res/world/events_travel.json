@@ -1,0 +1,53 @@
+[
+  {"id": "trv_road", "pool": "travel", "weight": 22, "level": 1,
+   "effects": {"progress": [0.0, 0.01], "mood": [-2, 4]},
+   "log": {
+     "low": ["{name}赶了半日路，脚上磨出两个泡，寻了棵大树歇脚。",
+             "{name}背着行囊翻山，一路上的野果都尝了个遍。",
+             "{name}走了三十里山路，鞋底磨穿了，心疼那双新鞋。"],
+     "mid": ["{name}御剑而行，半日已过三千里，{loc}在望。",
+             "{name}一路御风，顺道替{sect}捎了封书信。"],
+     "high": ["{name}缩地成寸，转瞬即至，{loc}山水尽收眼底。"]}},
+
+  {"id": "trv_shelter", "pool": "travel", "weight": 12, "level": 1,
+   "effects": {"health": [0.0, 0.08], "mood": [-2, 6]},
+   "log": {
+     "low": ["{name}寻得一处破庙歇脚，升起火堆烤干粮。",
+             "{name}夜宿{loc}山神庙，半夜听见猫头鹰叫，有点渗人。"],
+     "mid": ["{name}借宿{loc}野观，与观主对弈一局。"],
+     "high": ["{name}于{loc}星空下独坐一夜，参悟周天星斗。"]}},
+
+  {"id": "trv_scenic", "pool": "travel", "weight": 12, "level": 1,
+   "effects": {"mood": [4, 12]},
+   "log": {
+     "low": ["{name}路遇一片野桃花开得正好，看了半天舍不得走。",
+             "{name}登高远眺{loc}，胸中块垒一扫而空。"],
+     "mid": ["{name}见{loc}云海翻涌，落日熔金，久久无言。"],
+     "high": ["{name}行至{loc}绝顶，俯瞰山河如棋局。"]}},
+
+  {"id": "trv_map", "pool": "travel", "weight": 6, "level": 1,
+   "effects": {"mood": [2, 8], "flags": ["got_treasure_map"]},
+   "echo": {"delay": [90, 240], "event": "echo_map_dig"},
+   "log": {
+     "low": ["{name}从一个货郎手里淘了张旧地图，说是前朝修士遗留。",
+             "{name}抄录了{loc}附近的一张秘境草图，真假难辨。"],
+     "mid": ["{name}得{person}赠图一幅，标注了{loc}深处一条隐径。"],
+     "high": ["{name}以神识拓印{loc}地脉走向，自绘舆图一份。"]}},
+
+  {"id": "trv_lost", "pool": "travel", "weight": 8, "level": 1,
+   "effects": {"mood": [-8, 0], "stones": [-20, 0]},
+   "log": {
+     "low": ["{name}在{loc}迷了路，绕了一整天又回到原地。",
+             "{name}跟着野猪走的，结果野猪比他认路。",
+             "{name}问路问了三个樵夫，指了三个方向。"],
+     "mid": ["{name}于{loc}迷雾中困了三日，靠本命法器引路方出。"],
+     "high": ["{name}在{loc}迷失方向，索性闭目以神识丈量天地。"]}},
+
+  {"id": "trv_escort", "pool": "travel", "weight": 8, "level": 1,
+   "effects": {"stones": [30, 150], "mood": [0, 5], "health": [-0.05, 0.0]},
+   "log": {
+     "low": ["{name}接了个护送货物的活计，跑一趟赚了些灵石。",
+             "{name}替商队押镖去{loc}，一路平安，酒钱有了。"],
+     "mid": ["{name}护送{sect}的药材车队，途中驱散了几波小毛贼。"],
+     "high": ["{name}出面护送{person}一行，沿途宵禁，万籁俱寂。"]}}
+]

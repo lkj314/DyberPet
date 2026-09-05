@@ -1,0 +1,76 @@
+[
+  {"id": "life_market", "pool": "life", "weight": 14, "level": 1,
+   "effects": {"stones": [-40, 0], "mood": [2, 8]},
+   "log": {
+     "low": ["{name}在{loc}市集闲逛，什么也没买，看了个热闹。",
+             "{name}赶集买了些零碎，砍价砍得口干舌燥。"],
+     "mid": ["{name}在{loc}坊市淘到一件中品法器，价钱公道。"],
+     "high": ["{name}于{loc}闲步，随手救了家濒临倒闭的丹铺。"]}},
+
+  {"id": "life_homesick", "pool": "life", "weight": 8, "level": 1,
+   "effects": {"mood": [-10, -3]},
+   "log": {
+     "low": ["{name}夜里翻来覆去睡不着，想起了家乡的小村子。",
+             "{name}收到家书，读罢怔了半晌。"],
+     "mid": ["{name}独酌至深夜，思念故土，道心微有涟漪。"],
+     "high": ["{name}故地重游，物是人非，唯青山如旧。"]}},
+
+  {"id": "life_birthday", "pool": "life", "weight": 3, "level": 1,
+   "effects": {"mood": [5, 15]},
+   "log": {
+     "low": ["{name}过生辰，给自己煮了碗长寿面。",
+             "{name}寿辰这日偷得半日闲，舒坦。"],
+     "mid": ["{name}的生辰，故人们送来些小礼，暖意融融。"],
+     "high": ["{name}于{loc}大宴三日庆寿，贺客盈门。"]}},
+
+  {"id": "life_visit", "pool": "life", "weight": 10, "level": 1,
+   "effects": {"mood": [4, 12]},
+   "log": {
+     "low": ["{name}的老友顺路来坐，带了壶好酒，聊到深夜。",
+             "{name}去{loc}探望故人，蹭了两顿饭。"],
+     "mid": ["{name}与{person}重逢，忆起当年种种，感慨万千。"],
+     "high": ["{name}的洞府来了远客，把盏夜话，不知东方之既白。"]}},
+
+  {"id": "life_ill", "pool": "life", "weight": 8, "level": 1,
+   "effects": {"health": [-0.15, -0.04], "mood": [-8, -2]},
+   "log": {
+     "low": ["{name}染了风寒，裹着被子哼哼了两天。",
+             "{name}修炼不当偶感寒疾，无碍，就是难受。"],
+     "mid": ["{name}旧伤复发，缠绵病榻数日，幸得丹药调理。"],
+     "high": ["{name}闭关落下暗疾，{realm}修为也难立时压制。"]}},
+
+  {"id": "life_move", "pool": "life", "weight": 6, "level": 1,
+   "effects": {"mood": [0, 6], "stones": [-60, -10]},
+   "log": {
+     "low": ["{name}搬了个住处，新地方租金便宜些。",
+             "{name}收拾行李迁往新居，忙活了一整天。"],
+     "mid": ["{name}在{loc}新辟洞府，布下禁制，颇费了一番灵石。"],
+     "high": ["{name}择灵脉而居，新洞府气象不凡。"]}},
+
+  {"id": "life_buy_artifact", "pool": "life", "weight": 6, "level": 1,
+   "effects": {"stones": [-300, -60], "mood": [3, 12]},
+   "log": {
+     "low": ["{name}咬牙买了把像样的飞剑，从此告别烧火棍。",
+             "{name}淘到件称手的法器，把玩了一路。"],
+     "mid": ["{name}重金购得{item}，如虎添翼。"],
+     "high": ["{name}得{item}，与自身道法相合，如获至宝。"]}},
+
+  {"id": "life_garden", "pool": "life", "weight": 8, "level": 1,
+   "effects": {"mood": [3, 10], "stones": [0, 30]},
+   "log": {
+     "low": ["{name}在屋后开了片灵田，种了几株灵草，长势喜人。",
+             "{name}侍弄灵植半日，泥巴糊了满脸，心情倒好。"],
+     "mid": ["{name}的灵圃收获颇丰，炼丹材料自给自足。"],
+     "high": ["{name}以{realm}神识温养灵田，草木含灵，蔚然成林。"]}},
+
+  {"id": "life_recuperate", "weight": 0, "level": 1,
+   "effects": {"health": [0.15, 0.3], "mood": [-2, 4], "progress": [-0.02, 0.0]},
+   "log": {
+     "low": ["{name}伤势未愈，寻了处安稳地方将养，顺便舔舔伤口。",
+             "{name}闭门养伤，数钱度日，静待痊愈。"],
+     "mid": ["{name}于{loc}疗伤静修，药香满室。"],
+     "high": ["{name}以{realm}修为温养经脉，伤势迅速好转。"]}},
+
+  {"id": "life_seek_longevity", "weight": 0, "level": 2,
+   "effects": {"mood": [-5, 5]}}
+]

@@ -1,0 +1,84 @@
+[
+  {"id": "soc_meet", "pool": "social", "weight": 16, "level": 1,
+   "effects": {"mood": [2, 8]},
+   "rel": "befriend",
+   "log": {
+     "low": ["{name}在{loc}与{person}攀谈几句，颇为投缘。",
+             "{name}结识了散修{person}，互留了传讯玉简。"],
+     "mid": ["{name}于{loc}论道会上与{person}一见如故，相谈甚欢。"],
+     "high": ["{name}与来访的{person}纵论大道三日，引为知音。"]}},
+
+  {"id": "soc_tea", "pool": "social", "weight": 14, "level": 1,
+   "effects": {"mood": [3, 10], "progress": [0.0, 0.01], "stones": [-30, 0]},
+   "log": {
+     "low": ["{name}在{loc}茶棚蹭了半日茶水，听了些江湖传闻。",
+             "{name}与二三道友品茗闲谈，一日好不快活。"],
+     "mid": ["{name}邀{person}于{loc}煮茶论道，偶有所得。"],
+     "high": ["{name}于{loc}设茶席，四方修士慕名而来，座中皆一时之选。"]}},
+
+  {"id": "soc_deal", "pool": "social", "weight": 12, "level": 1,
+   "effects": {"stones": [20, 180], "mood": [0, 5]},
+   "log": {
+     "low": ["{name}在坊市摆摊卖杂货，赚了几块灵石。",
+             "{name}把攒的妖兽皮骨拿去坊市换了灵石。"],
+     "mid": ["{name}在{loc}坊市做成一笔大买卖，利润丰厚。"],
+     "high": ["{name}的一件旧藏被{sect}重金求去，一时传为佳话。"]}},
+
+  {"id": "soc_favor_help", "pool": "social", "weight": 10, "level": 1,
+   "effects": {"mood": [2, 8], "stones": [-40, 0]},
+   "rel": "aid",
+   "log": {
+     "low": ["{name}路见一名受伤的散修，分了半瓶伤药。",
+             "{name}顺手帮{person}引路，对方千恩万谢。"],
+     "mid": ["{name}出手替{person}挡了一场灾祸，欠下善缘。"],
+     "high": ["{name}庇护了{sect}一支残脉，恩义深重。"]}},
+
+  {"id": "soc_favor_recv", "pool": "social", "weight": 10, "level": 1,
+   "effects": {"mood": [3, 10], "stones": [10, 120]},
+   "log": {
+     "low": ["{name}受了{person}一瓶丹药，记下了这份人情。",
+             "{name}手头拮据，{person}雪中送炭借了些灵石。"],
+     "mid": ["{name}遇险时被{person}所救，感激不尽。"],
+     "high": ["{sect}长老亲赠灵药，看在{person}的面子上。"]}},
+
+  {"id": "soc_quarrel", "pool": "social", "weight": 10, "level": 1,
+   "effects": {"mood": [-10, -2]},
+   "rel": "enemy",
+   "log": {
+     "low": ["{name}在坊市与人争一件货物，呛了半天，不欢而散。",
+             "{name}与{person}口角几句，结了点小梁子。"],
+     "mid": ["{name}与{person}争夺{item}，撕破脸皮，结下仇怨。"],
+     "high": ["{name}在论道会上驳得{person}体面无存，对方怀恨而去。"]}},
+
+  {"id": "soc_sect_promote", "pool": "social", "weight": 5, "level": 2,
+   "effects": {"mood": [8, 20], "stones": [50, 200]},
+   "log": {
+     "low": ["{name}在{sect}当上了管事，总算有了正式身份。",
+             "{name}替{sect}办妥一件差事，得了赏钱。"],
+     "mid": ["{name}获{sect}擢升，跻身执事之列，风光了不少。"],
+     "high": ["{name}受{sect}推举晋位长老，{loc}各方道贺。"]}},
+
+  {"id": "soc_feast", "pool": "social", "weight": 8, "level": 1,
+   "effects": {"mood": [5, 15], "health": [-0.06, 0.0], "stones": [-50, -5]},
+   "log": {
+     "low": ["{name}与道友们喝大了，抱着酒坛睡在{loc}道边。",
+             "{name}赴了一场流水席，酩酊大醉，好不快活。"],
+     "mid": ["{name}在{loc}酒楼设宴，答谢一众故交。"],
+     "high": ["{name}于{loc}开百年陈酿，与{person}对饮到天明。"]}},
+
+  {"id": "soc_disciple", "pool": "social", "weight": 4, "level": 2,
+   "effects": {"mood": [5, 15], "flags": ["has_disciple"]},
+   "log": {
+     "low": ["{name}见一孩童根骨尚可，动了收徒的念头。",
+             "{name}收了个小徒弟，每日鸡飞狗跳。"],
+     "mid": ["{name}正式收{person}为徒，倾囊相授。"],
+     "high": ["{name}开坛收徒，{loc}青年才俊争相拜入门墙。"]}},
+
+  {"id": "soc_reconcile", "pool": "social", "weight": 6, "level": 1,
+   "effects": {"mood": [3, 10]},
+   "log": {
+     "low": ["{name}与旧日口角的道友道了歉，两清了。",
+             "{name}托人调解，与{person}化干戈为玉帛。"],
+     "mid": ["{name}主动示好，与{person}尽释前嫌，共饮了一场。"],
+     "high": ["{name}与宿敌在{loc}论道，一笑泯恩仇，传为美谈。"]}}
+]

@@ -36,6 +36,24 @@ class AdventurePlugin(Plugin):
         self._was_away = False
         self._atexit_installed = False
 
+    # ---- 世界日志流镜像（主线·游历直播，日志面板可见）----
+    @staticmethod
+    def _world():
+        try:
+            from DyberPet.world_service import get_world
+            return get_world()
+        except Exception:  # noqa: BLE001
+            return None
+
+    @classmethod
+    def _player_log(cls, text: str, level: int = 1):
+        w = cls._world()
+        if w is not None:
+            try:
+                w.player_log(text, level)
+            except Exception:  # noqa: BLE001
+                pass
+
     # ---- 设置便捷读取（key 里去掉括号说明，兼容文档原文案）----
     def _dur_key(self) -> str:
         raw = str(self.api.settings.get('default_duration', '中程(2时)'))
@@ -111,15 +129,15 @@ class AdventurePlugin(Plugin):
     def _show_daoyun(self):
         if self.daoyun is None:
             self.daoyun = DaoYunWidget(self.api.pet.open_adventure)
-        self._place_daoyun()
+        self.daoyun.snap_bottom_right()
         self.daoyun.show()
 
     def _place_daoyun(self):
+        """留守分身固定桌面右下角（不跟随本体——本体已离场，位置无意义）。"""
         if self.daoyun is None:
             return
         try:
-            x, y, w, h = self.api.pet.get_position()
-            self.daoyun.move(int(x + w * 0.62), int(y + h * 0.18))
+            self.daoyun.snap_bottom_right()
         except Exception:  # noqa: BLE001
             pass
 
@@ -170,8 +188,7 @@ class AdventurePlugin(Plugin):
         if away:
             if self.daoyun is None:
                 self._show_daoyun()
-            else:
-                self._place_daoyun()
+            # 分身已固定右下角且可拖动，tick 不再重定位（避免跟随隐藏本体乱漂）
             st = self.svc.status()
             remain = realms.dur_label(st.get('remain', 0))
             self.daoyun.set_tip(f"道韵分身\n本体在「{st['name']}」历练\n约 {remain} 后归来")
@@ -184,6 +201,12 @@ class AdventurePlugin(Plugin):
         self.api.pet.play_act('sword_fly')
         self._show_daoyun()
         QTimer.singleShot(2600, self._hide_pet_if_still_away)
+        # 游历直播：起点入流
+        try:
+            st = self.svc.status()
+            self._player_log(f"御剑离家，赴「{st.get('name', '远方')}」游历。", 1)
+        except Exception:  # noqa: BLE001
+            pass
 
     def _hide_pet_if_still_away(self):
         if self.svc is not None and self.svc.status()['state'] == 'away':
@@ -203,6 +226,8 @@ class AdventurePlugin(Plugin):
             self.svc.note_talisman(idx, text)
         except Exception:  # noqa: BLE001
             pass
+        # 游历直播：传讯符同步入流（L1 静默，LLM 版不重复入流）
+        self._player_log(f"传讯符（{idx + 1}/{total}）：{text}", 1)
         if len(self.talismans) > 3:      # 未读也最多静置 3 张，防堆积
             old = self.talismans.pop(0)
             try:
@@ -302,6 +327,17 @@ class AdventurePlugin(Plugin):
             notif += '（带伤，修行减速，会自行恢复）'
         self.api.pet.notify('system', notif)
 
+        # 游历直播：归来结算入流（重伤/带伤提高一级，让人翻日志时看见）
+        lvl = 3 if outcome in ('重伤',) else 2
+        self._player_log(
+            f"从「{result.get('name', '')}」游历归来："
+            f"{events.OUTCOME_TXT.get(outcome, outcome)}。"
+            + (f"修为 +{exp}，灵石 +{stones}。" if exp else
+               (f"灵石 +{stones}。" if stones else '')), lvl)
+
+        # 奇遇请示：归来时掷一次（选择权归用户——文档「道友范式」）
+        self._maybe_offer_choice(result)
+
         if self._llm_on():
             length = str(self.api.settings.get('narrative_length', '短篇(80字)'))
             narrative.request_return(
@@ -319,6 +355,25 @@ class AdventurePlugin(Plugin):
                 self.svc.update_last_record_story(text)
             except Exception:  # noqa: BLE001
                 pass
+
+    def _maybe_offer_choice(self, result: dict):
+        """归来掷奇遇：命中则请示（气泡一句 + 通知），由角色面板应答。"""
+        try:
+            from DyberPet.choice_service import get_choice
+            w = self._world()
+            if w is None:
+                return
+            pending = get_choice(w).offer({
+                'phase': 'return', 'loc': result.get('name', '')})
+            if not pending:
+                return
+            self.api.pet.say(f"【请示·{pending['title']}】{pending['narrative']}")
+            self.api.pet.notify(
+                'system',
+                f"奇遇请示「{pending['title']}」：{pending['narrative']}"
+                f"（打开角色面板「修仙世界」，替我拿个主意）")
+        except Exception as e:  # noqa: BLE001
+            print(f'[adventure] offer choice failed: {e!r}')
 
     def _auto_redispatch(self):
         """归来后自动再派：取当前可去的最高阶秘境 + 默认时长/策略。"""

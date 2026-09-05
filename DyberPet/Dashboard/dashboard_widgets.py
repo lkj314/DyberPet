@@ -134,9 +134,10 @@ class NoteFlowGroup(QWidget):
         self.vBoxLayout.setAlignment(Qt.AlignTop)
         self.vBoxLayout.setSpacing(0)
 
+        # ⚠️ noteLayout 不设 alignment：设了 Qt.AlignVCenter 后子项不再
+        # 拉伸全宽，每条日志被压成 sizeHint 窄条（文字全挤烂的根源）
         self.noteLayout.setSpacing(3)
         self.noteLayout.setContentsMargins(15, 0, 15, 15)
-        self.noteLayout.setAlignment(Qt.AlignVCenter)
 
         self.vBoxLayout.addWidget(self.titleLabel)
         self.vBoxLayout.addSpacing(12)
@@ -151,33 +152,39 @@ class NoteFlowGroup(QWidget):
     def addNote(self, icon: QPixmap, content: str):
         """ add new notification to stream """
         time = datetime.datetime.now().strftime("%H:%M:%S")
-        notification = NotificationWidget(icon, time, content)
+        # 正文可用宽度：面板全宽 - 导航(165) - expandLayout 边距(140)
+        #               - noteLayout 边距(30) - 图标(24) - 时间(75) - 间距余量(30)
+        text_w = max(200, self.sizeHintDyber[0] - 165 - 140 - 30 - 24 - 75 - 30)
+        notification = NotificationWidget(icon, time, content, text_width=text_w)
         self.notes_list.append(notification)
         self.noteLayout.insertWidget(0, HorizontalSeparator(QColor(20,20,20,125), 1))
         self.noteLayout.insertWidget(0, notification)
         self.nrow += 1
         self.adjustSize()
-    
+
     def adjustSize(self):
         h = self.nrow * 8 + 60 + sum([w.height() for w in self.notes_list])
         return self.resize(self.width(), h)
-    
-    
+
+
 
 
 class NotificationWidget(QWidget):
-    def __init__(self, icon: QPixmap, time: str, content: str):
+    def __init__(self, icon: QPixmap, time: str, content: str,
+                 text_width: int = 400):
         super().__init__()
 
         self.hBoxLayout = QHBoxLayout(self)
-        self.hBoxLayout.setAlignment(Qt.AlignVCenter)
         self.hBoxLayout.setContentsMargins(5, 5, 5, 5)
+        self.hBoxLayout.setSpacing(6)
 
-        self.__init_Note(icon, time, content)
+        self.__init_Note(icon, time, content, text_width)
         self.setMinimumHeight(NOTE_H)
+        # 先按给定正文宽度换行，再锁定真实高度（ExpandLayout 只取当前高度）
         self.adjustSize()
+        self.setFixedHeight(max(NOTE_H, self.sizeHint().height()))
 
-    def __init_Note(self, icon, time, content):
+    def __init_Note(self, icon, time, content, text_width: int):
 
         Icon = QLabel()
         Icon.setFixedSize(int(24), int(24))
@@ -192,15 +199,12 @@ class NotificationWidget(QWidget):
         self.noteLabel = CaptionLabel(content)
         setFont(self.noteLabel, 15, QFont.Normal)
         self.noteLabel.setWordWrap(True)
-        self.noteLabel.setMinimumWidth(275)
-        self.noteLabel.adjustSize()
+        # 固定正文宽度让 wordWrap 在构造期就得到真实换行高度
+        self.noteLabel.setFixedWidth(text_width)
 
-        self.hBoxLayout.addWidget(Icon, Qt.AlignLeft)
-        #self.hBoxLayout.addStretch(1)
-        self.hBoxLayout.addWidget(timeLabel, Qt.AlignLeft)
-        #self.hBoxLayout.addStretch(1)
-        self.hBoxLayout.addWidget(self.noteLabel, Qt.AlignLeft)
-        self.hBoxLayout.addStretch(1)
+        self.hBoxLayout.addWidget(Icon, 0, Qt.AlignVCenter)
+        self.hBoxLayout.addWidget(timeLabel, 0, Qt.AlignVCenter)
+        self.hBoxLayout.addWidget(self.noteLabel, 1, Qt.AlignVCenter)
 
 
 
@@ -295,9 +299,9 @@ class StatusCard(SimpleCardWidget):
         setFont(self.daysLabel, 15, QFont.Normal)
         self.daysLabel.setFixedHeight(25)
 
-        hbox_title.addWidget(self.nameLabel, Qt.AlignLeft | Qt.AlignVCenter)
+        hbox_title.addWidget(self.nameLabel, 0, Qt.AlignLeft | Qt.AlignVCenter)
         hbox_title.addStretch(1)
-        hbox_title.addWidget(self.daysLabel, Qt.AlignRight | Qt.AlignVCenter)
+        hbox_title.addWidget(self.daysLabel, 0, Qt.AlignRight | Qt.AlignVCenter)
         
         # Level Badge --------------------
         lvlWidget = QWidget()
@@ -329,8 +333,7 @@ class StatusCard(SimpleCardWidget):
         vBoxLayout.setSpacing(5)
 
         vBoxLayout.addStretch(1)
-        vBoxLayout.addLayout(
-            hbox_title, Qt.AlignLeft | Qt.AlignVCenter)
+        vBoxLayout.addLayout(hbox_title)
         vBoxLayout.addWidget(HorizontalSeparator(QColor(20,20,20,125), 1))
         #vBoxLayout_status.addStretch(1)
         vBoxLayout.addWidget(lvlWidget, 1, Qt.AlignLeft | Qt.AlignVCenter)
@@ -341,9 +344,9 @@ class StatusCard(SimpleCardWidget):
         # Assemble main body
         
         self.hBoxLayout.addStretch(1)
-        self.hBoxLayout.addWidget(self.pfpLabel, Qt.AlignRight | Qt.AlignVCenter)
+        self.hBoxLayout.addWidget(self.pfpLabel, 0, Qt.AlignRight | Qt.AlignVCenter)
         self.hBoxLayout.addStretch(1)
-        self.hBoxLayout.addLayout(vBoxLayout, Qt.AlignLeft | Qt.AlignVCenter)
+        self.hBoxLayout.addLayout(vBoxLayout, 1)
         self.hBoxLayout.addStretch(1)
     
     def _changePet(self):
@@ -762,8 +765,8 @@ class coinWidget(QWidget):
         self.coinAmount.setEnabled(False)
 
         self.hBoxLayout.addStretch(1)
-        self.hBoxLayout.addWidget(self.icon, Qt.AlignRight | Qt.AlignVCenter)
-        self.hBoxLayout.addWidget(self.coinAmount, Qt.AlignRight | Qt.AlignVCenter)
+        self.hBoxLayout.addWidget(self.icon, 0, Qt.AlignRight | Qt.AlignVCenter)
+        self.hBoxLayout.addWidget(self.coinAmount, 0, Qt.AlignRight | Qt.AlignVCenter)
         coin_value = settings.pet_data.coins
         self._updateCoin(int(coin_value))
 
@@ -1643,15 +1646,15 @@ class ShopItemWidget(SimpleCardWidget):
         #self.infoLabel.setFixedHeight(25)
 
         self.vBox_description.addStretch(1)
-        self.vBox_description.addWidget(self.nameLabel, Qt.AlignVCenter | Qt.AlignLeft)
+        self.vBox_description.addWidget(self.nameLabel, 0, Qt.AlignVCenter | Qt.AlignLeft)
         #self.vBox_description.addStretch(1)
-        self.vBox_description.addWidget(self.infoLabel, Qt.AlignVCenter | Qt.AlignLeft)
+        self.vBox_description.addWidget(self.infoLabel, 0, Qt.AlignVCenter | Qt.AlignLeft)
         self.vBox_description.addStretch(1)
 
         self.hBox_description.addStretch(1)
-        self.hBox_description.addWidget(self.imgLabel, Qt.AlignRight | Qt.AlignVCenter)
+        self.hBox_description.addWidget(self.imgLabel, 0, Qt.AlignRight | Qt.AlignVCenter)
         self.hBox_description.addStretch(1)
-        self.hBox_description.addLayout(self.vBox_description, Qt.AlignLeft | Qt.AlignVCenter)
+        self.hBox_description.addLayout(self.vBox_description, 1)
         self.hBox_description.addStretch(1)
 
 

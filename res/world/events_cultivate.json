@@ -1,0 +1,73 @@
+[
+  {"id": "cult_sit", "pool": "cultivate", "weight": 30, "level": 1,
+   "effects": {"progress": [0.015, 0.04], "mood": [-2, 3]},
+   "log": {
+     "low": ["{name}在{loc}寻了处僻静山洞打坐，灵气平平，倒也心静。",
+             "{name}于{loc}吐纳一日，脚边落了两只雀儿也未曾察觉。"],
+     "mid": ["{name}在{loc}布下聚灵阵闭关，周天运转自如有小进益。",
+             "{name}于{loc}静室打坐，指尖灵光流转。"],
+     "high": ["{name}于{loc}深处入定，方圆百里灵气隐隐朝贺。",
+              "{name}闭目之间，{loc}上空风云随之缓行。"]}},
+
+  {"id": "cult_array", "pool": "cultivate", "weight": 16, "level": 1,
+   "effects": {"progress": [0.03, 0.06], "stones": [-60, -10], "mood": [0, 4]},
+   "log": {
+     "low": ["{name}咬牙买了几块灵石，布了个简陋聚灵阵，收益尚可。",
+             "{name}在{loc}摆阵苦修，灵石见底，进境倒是实在。"],
+     "mid": ["{name}以灵石布下三才阵，闭关七日，修为再进一步。",
+             "{name}布阵引{root}属性灵气灌体，事半功倍。"],
+     "high": ["{name}以{realm}修为布下周天大阵，引动{loc}地脉灵机。"]}},
+
+  {"id": "cult_epiphany", "pool": "cultivate", "weight": 5, "level": 2,
+   "effects": {"progress": [0.08, 0.15], "mood": [10, 25]},
+   "log": {
+     "low": ["{name}修炼时忽有明悟，从前想不通的关卡豁然而解，欣喜不已。",
+             "{name}看{loc}溪水东流，忽然悟了半分道理。"],
+     "mid": ["{name}参悟天道残痕，隐有顿悟之感，道心通明。",
+             "{name}于{loc}观云海翻涌，忽觉体内法力自行流转，大为惊喜。"],
+     "high": ["{name}坐忘{loc}，一念三千，大道隐现，修为精进。"]}},
+
+  {"id": "cult_stuck", "pool": "cultivate", "weight": 14, "level": 1,
+   "effects": {"progress": [0.0, 0.008], "mood": [-8, -2]},
+   "log": {
+     "low": ["{name}苦修一日毫无所得，瓶颈依旧，有些气馁。",
+             "{name}对着功法抓耳挠腮，今日算是白坐了。"],
+     "mid": ["{name}闭关旬日，境界壁垒纹丝不动，心浮气躁。",
+             "{name}于{loc}苦参，仍差一线，闷闷不乐。"],
+     "high": ["{name}推演大道，壁垒森严，纵以{realm}之能亦难寸进。"]}},
+
+  {"id": "cult_technique", "pool": "cultivate", "weight": 10, "level": 1,
+   "effects": {"progress": [0.02, 0.05], "mood": [2, 8],
+               "flags": ["technique_practiced"]},
+   "log": {
+     "low": ["{name}把一式基础法诀练得纯熟，虽非大道，也算家底。",
+             "{name}温习本命功法，手势愈发圆熟。"],
+     "mid": ["{name}将一 门神通祭炼至小成，攻伐之力又涨三分。"],
+     "high": ["{name}以{realm}修为重修基础法诀，返璞归真，别有洞天。"]}},
+
+  {"id": "cult_qi_deviation", "pool": "cultivate", "weight": 4, "level": 2,
+   "effects": {"health": [-0.25, -0.1], "progress": [-0.2, -0.05], "mood": [-15, -5]},
+   "log": {
+     "low": ["{name}贪功冒进，险些走火入魔，惊出一身冷汗。",
+             "{name}行功岔了气，{loc}静室里咳了半日。"],
+     "mid": ["{name}强行冲关，真气逆行，{loc}中闹出不小动静，险象环生。"],
+     "high": ["{name}参悟过深，心魔骤起，{loc}灵气紊乱三日方平。"]},
+   "death_cause": "走火入魔，坐化于{loc}"},
+
+  {"id": "cult_root_resonance", "pool": "cultivate", "weight": 6, "level": 1,
+   "effects": {"progress": [0.02, 0.06], "mood": [0, 6]},
+   "log": {
+     "low": ["{name}的{root}灵根与{loc}地气隐隐呼应，修炼如有神助。",
+             "{name}寻得一处{root}属性灵眼，欢欢喜喜占下修炼。"],
+     "mid": ["{name}的{root}灵根异动，与{loc}灵脉共鸣，进境飞快。"],
+     "high": ["{name}的{root}属性大道与天地共振，一呼一吸皆是造化。"]}},
+
+  {"id": "cult_pill", "pool": "cultivate", "weight": 8, "level": 1,
+   "effects": {"progress": [0.02, 0.05], "health": [0.0, 0.1], "mood": [2, 6],
+               "stones": [-80, -20]},
+   "log": {
+     "low": ["{name}花灵石购了枚劣等丹药服下，药力驳杂，聊胜于无。",
+             "{name}服下一枚养气丹，盘膝温养。"],
+     "mid": ["{name}服下上品丹药，药力化开如暖流游走四肢百骸。"],
+     "high": ["{name}以丹药辅修，一举打通多年淤塞，神清气爽。"]}}
+]

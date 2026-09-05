@@ -1,13 +1,13 @@
 {
   "id": "doudizhu",
   "name": "斗地主陪玩",
-  "version": "2.0.0",
+  "version": "2.2.0",
   "author": "DyberPet",
-  "description": "像真实斗地主一样出牌就有语音（预合成，零延迟）：对三、王炸、要不起全都有。桌宠陪你打牌+当狗头军师帮你记牌算牌。",
+  "description": "像真实斗地主一样出牌就有语音（预合成，零延迟）：对三、王炸、要不起全都有。桌宠陪你打牌+当狗头军师：本地算牌即时提示（高亮推荐牌），Ollama 润色解说上气泡。",
   "entry": "main:DouDizhuPlugin",
   "min_app_version": "0.6.7",
   "launchable": true,
-  "permissions": ["pet.bubble", "pet.react", "pet.play_audio", "pet.speak", "net.ollama"],
+  "permissions": ["pet.bubble", "pet.react", "pet.play_audio", "net.ollama"],
   "settings_schema": [
     {
       "key": "enabled",
@@ -48,8 +48,16 @@
       "type": "switch",
       "default": false,
       "label": "AI 军师",
-      "description": "Ollama 把记牌简报说成狗头军师建议（帮你算对手手牌，需本机 Ollama）",
-      "icon": "LIGHTBULB"
+      "description": "Ollama 把记牌简报润色成军师解说上气泡（需本机 Ollama）；不出牌建议时本地算牌提示照常可用",
+      "icon": "SCROLL"
+    },
+    {
+      "key": "advisor_tts",
+      "type": "switch",
+      "default": true,
+      "label": "军师语音",
+      "description": "军师/提示推荐牌型时播预合成语音（单K、对5、要不起），离线零延迟，听得清",
+      "icon": "VOLUME"
     },
     {
       "key": "card_theme",

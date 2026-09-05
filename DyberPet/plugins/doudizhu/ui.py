@@ -6,9 +6,11 @@
 - **牌型语音**：谁出牌都触发 voice/ 里的预合成 mp3（"对三！""王炸！！""要不起"），
   桌宠关键事件用专属情绪语音（叫地主/炸弹得意/胜负）。
 - **提示按钮**：循环给出当前所有合法出法（最优在前），再次点击换下一手；
-  选中金框高亮；无解时明示"要不起"并自动禁用出牌。
+  选中金框高亮 + 文案显示牌型与压制目标；无解时明示"要不起"并自动禁用出牌。
 - **选中即校验**：选牌实时显示牌型与"可出/压不过"，出牌按钮联动。
-- **军师**：Ollama 把记牌简报润色成狗头军师建议（气泡），玩家回合自动+手动可问。
+- **军师**：本地算牌即时给确定性提示（高亮+文案+预合成语音），Ollama 只负责
+  把记牌简报润色成狗头军师建议上气泡——**语音永远播预合成牌型音**，
+  绝不实时 TTS 念 LLM 输出（LLM 长文/算牌过程念出来没人听得懂）。
 """
 from __future__ import annotations
 
@@ -21,7 +23,7 @@ from PySide6.QtWidgets import QPushButton, QWidget
 
 from .ai_engine import AIPlayer
 from .card_rules import (Move, can_beat, card_is_red, card_label,
-                         card_rank, detect_move)
+                         card_rank, detect_move, move_desc)
 from .commentary import Commentator
 from .game_engine import DoudizhuEngine, IllegalMove
 from .voice import VoiceBank
@@ -57,8 +59,8 @@ SEAT_NAME = {0: '你', 1: '肥牛', 2: '路人甲'}
 class DouDizhuWindow(QWidget):
     """斗地主牌桌。座位：0=玩家(下方)，1=桌宠「肥牛」(左上)，2=路人甲(右上)。"""
 
-    # Ollama 军师台词回传主线程
-    advisorReady = Signal(str)
+    # Ollama 军师回传主线程：(文本, 失败原因)——成功时原因为空串
+    advisorReady = Signal(str, str)
 
     def __init__(self, api, commentator: Commentator, voices: VoiceBank,
                  parent=None):
@@ -80,6 +82,12 @@ class DouDizhuWindow(QWidget):
         self._critical_announced: set = set()
         self._status = ''
         self._advisor_asked = False
+        self._advisor_pending = False
+        self._advisor_hint: Optional[Move] = None    # 本地算牌的最优候选
+        self._advisor_spoken = False                 # 该次询问语音是否已播
+        self._advisor_timer = QTimer(self)
+        self._advisor_timer.setSingleShot(True)
+        self._advisor_timer.timeout.connect(self._advisor_timeout)
 
         self.advisorReady.connect(self._on_advisor_ready)
 
@@ -154,6 +162,10 @@ class DouDizhuWindow(QWidget):
         self._hint_moves = None
         self._hint_idx = -1
         self._advisor_asked = False
+        self._advisor_pending = False
+        self._advisor_hint = None
+        self._advisor_spoken = False
+        self._advisor_timer.stop()
         self._bid_buttons_visibility(False)
         if self._result_btn is not None:
             self._result_btn.deleteLater()
@@ -236,6 +248,7 @@ class DouDizhuWindow(QWidget):
             self.passBtn.setEnabled(self.engine.last_move is not None
                                     and self.engine.last_player != 0)
             if (self._use_llm() and not self._advisor_asked
+                    and not self._advisor_pending
                     and self.engine.last_player != 0):
                 self._ask_advisor(auto=True)
         else:
@@ -315,7 +328,8 @@ class DouDizhuWindow(QWidget):
     def _on_play(self):
         if self.engine.phase != 'playing' or self.engine.turn != 0:
             return
-        cards = sorted(self.selected, key=card_rank)
+        hand = self.engine.hands[0]
+        cards = sorted((hand[i] for i in self.selected), key=card_rank)
         if not cards:
             return
         move = detect_move(cards)
@@ -360,7 +374,7 @@ class DouDizhuWindow(QWidget):
             self._advance_play()
 
     def _on_hint(self):
-        """提示：循环给出所有合法出法（最优在前）；无解明示。"""
+        """提示：循环给出所有合法出法（最优在前）；高亮 + 文案；无解明示。"""
         if self.engine.phase != 'playing' or self.engine.turn != 0:
             return
         if self._hint_moves is None:
@@ -374,8 +388,11 @@ class DouDizhuWindow(QWidget):
                 return
         self._hint_idx = (self._hint_idx + 1) % len(self._hint_moves)
         mv = self._hint_moves[self._hint_idx]
-        self.selected = set(mv.cards)
+        hand = self.engine.hands[0]
+        self.selected = {hand.index(c) for c in mv.cards}   # 提示高亮也走索引
         self._refresh_selection_state()
+        self._flash(f'提示 {self._hint_idx + 1}/{len(self._hint_moves)}：'
+                    f'{self._move_hint_text(mv)}')
         self.update()
 
     def helper_moves(self, view: dict) -> List[Move]:
@@ -384,28 +401,116 @@ class DouDizhuWindow(QWidget):
         return helper.all_moves(view)
 
     # ---- 军师 ----
+    def _move_hint_text(self, mv: Move) -> str:
+        """提示文案：牌型 + 压制目标（压谁的什么牌）。"""
+        txt = move_desc(mv)
+        if self.engine.last_move is not None and self.engine.last_player != 0:
+            txt += (f'（压{SEAT_NAME.get(self.engine.last_player, "上家")}'
+                    f'的{move_desc(self.engine.last_move)}）')
+        return txt
+
+    def _apply_hint(self, mv: Optional[Move]):
+        """确定性出牌提示：高亮推荐牌 + 文案 + 预合成牌型语音。
+        mv=None 表示要不起。不依赖 Ollama，永远即时可用。"""
+        if self.engine.phase != 'playing' or self.engine.turn != 0:
+            return
+        self._hint_moves = None          # 高亮后重置提示循环
+        if mv is None:
+            self.selected.clear()
+            self._refresh_selection_state()
+            self._flash('要不起，点「不要」吧')
+            if self._s('advisor_tts', True):
+                self.voices.play(self.api, 'pass')       # 预合成「要不起」
+            self.update()
+            return
+        hand = self.engine.hands[0]
+        self.selected = {hand.index(c) for c in mv.cards}
+        self._refresh_selection_state()
+        self._flash(f'建议：{self._move_hint_text(mv)}')
+        if self._s('advisor_tts', True):
+            self.voices.play_move(self.api, mv)          # 预合成「单K」「对5」…
+        self.update()
+
     def _ask_advisor(self, auto: bool = False):
         if self.engine.phase not in ('bidding', 'playing'):
             return
         view = self.engine.build_view(0)
-        brief = Commentator.build_brief(view)
+        # ---- 本地确定性算牌：候选既注入 LLM 简报，也直接当提示用 ----
+        cands: List[Move] = []
+        hint: Optional[Move] = None
+        if self.engine.phase == 'playing' and self.engine.turn == 0:
+            try:
+                cands = self.helper_moves(view)
+            except Exception:  # noqa: BLE001
+                cands = []
+            hint = cands[0] if cands else None
+        self._advisor_hint = hint
+        self._advisor_spoken = False
+
+        if not auto:
+            # 军师按钮先给确定性反馈（高亮+文案+预合成语音）——
+            # Ollama 挂了/没开也照样有提示，不再只甩一句"未开启"
+            if self.engine.phase == 'playing' and self.engine.turn == 0:
+                self._apply_hint(hint)
+            else:
+                self._flash('叫分阶段没有出牌建议，先叫地主吧')
         if not self._use_llm():
-            if not auto:
-                self._flash('军师未开启：设置里打开「AI 军师」')
             return
+        if self._advisor_pending:
+            return                      # 上一问还没回来，不叠问
         self._advisor_asked = True
+        self._advisor_pending = True
         if not auto:
             self._status = '军师在想…'
             self.update()
+        # 35 秒兜底：即使回调链全部失联也能解除等待态
+        self._advisor_timer.start(35000)
+        brief = Commentator.build_brief(view)
+        # 算牌注入：本地引擎的合法候选（最优在前）喂给军师——
+        # LLM 拿确定性候选给建议，不再凭空瞎说
+        if cands:
+            cand_txt = '、'.join(move_desc(m) for m in cands[:8])
+            brief += f'可出候选（从优到劣）：{cand_txt}。'
         self.commentator.request_advisor(
-            brief, lambda text: self.advisorReady.emit(text))
+            brief, lambda text, error: self.advisorReady.emit(text or '', error or ''))
 
-    def _on_advisor_ready(self, text: str):
-        if not (text and self.api is not None):
+    def _on_advisor_ready(self, text, error=''):
+        """军师回话：LLM 文本只上气泡；语音走预合成牌型音，绝不念 LLM 长文。
+        失败/超时/空回复也必须解除等待态并明示原因。"""
+        self._advisor_pending = False
+        self._advisor_timer.stop()
+        was_waiting = (self._status == '军师在想…')
+        if was_waiting:
+            self._status = ''
+        if not text:
+            if was_waiting:
+                # 手动问时确定性提示（高亮+语音）已在 _apply_hint 给过，
+                # 这里只补失败原因，不打断玩家
+                self._flash(error or '军师走神了（Ollama 未响应，检查服务与模型）')
             return
-        self._status = ''
-        self.api.pet.say(f'军师提示：{text}')
+        if self.api is None:
+            return
+        self.api.pet.say(f'军师：{text}')
         self.api.pet.react('happy')
+        # 语音：播预合成牌型音（"单K！""对5"），离线零延迟、永远听得懂。
+        # 手动问时 _apply_hint 已播过（_advisor_spoken=True），不重播；
+        # 自动问时在此补播。
+        if (self._s('advisor_tts', True) and not self._advisor_spoken
+                and self.engine.phase == 'playing'
+                and self.engine.turn == 0):
+            mv = self._advisor_hint
+            if mv is not None and set(mv.cards) <= set(self.engine.hands[0]):
+                self.voices.play_move(self.api, mv)
+            elif mv is None:
+                self.voices.play(self.api, 'pass')
+            self._advisor_spoken = True
+
+    def _advisor_timeout(self):
+        if not self._advisor_pending:
+            return
+        self._advisor_pending = False
+        if self._status == '军师在想…':
+            self._flash('军师想太久了，先自己拿主意吧')
 
     # ---- 结算 ----
     def _finish_if_over(self):
@@ -508,11 +613,12 @@ class DouDizhuWindow(QWidget):
             cx = x0 + i * OVER
             top = y - (16 if i in self.selected else 0)
             if cx <= px <= cx + CW and top <= py <= top + CH:
-                c = hand[i]
-                if c in self.selected:
-                    self.selected.discard(c)
+                # selected 存索引（非牌值）：牌值 0..53 会与手牌索引 0..19 错配，
+                # 导致高亮判断 `i in selected` 错位甚至永远不命中
+                if i in self.selected:
+                    self.selected.discard(i)
                 else:
-                    self.selected.add(c)
+                    self.selected.add(i)
                 self._hint_moves = None      # 手动改动后重新开始提示循环
                 self._refresh_selection_state()
                 self.update()
@@ -521,8 +627,12 @@ class DouDizhuWindow(QWidget):
     def _refresh_selection_state(self):
         self._sel_move = None
         self._sel_can = False
-        if self.selected:
-            cards = sorted(self.selected, key=card_rank)
+        hand = self.engine.hands[0]
+        if self.selected and all(0 <= i < len(hand) for i in self.selected):
+            # selected 存的是手牌索引，必须先换算成真实牌值再评估——
+            # 直接拿索引喂 detect_move 会产生幻影牌型：大王在手牌第 0 位
+            # 会被当成 3♠（牌值 0，rank 0），出现「大王压不过 10」的错判
+            cards = sorted((hand[i] for i in self.selected), key=card_rank)
             mv = detect_move(cards)
             self._sel_move = mv
             if mv is not None:

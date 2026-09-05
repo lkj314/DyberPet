@@ -130,7 +130,7 @@ class ActDesignWindow(QWidget):
         self.image.setScaledContents(True)
         self.image.setAlignment(Qt.AlignCenter) #Qt.AlignBottom | Qt.AlignHCenter)
         self.imgLayout.addStretch()
-        self.imgLayout.addWidget(self.image, Qt.AlignCenter)
+        self.imgLayout.addWidget(self.image, 0, Qt.AlignCenter)
         self.imgLayout.addStretch()
         self.imgFrame.setLayout(self.imgLayout)
         # Progress bar
@@ -306,7 +306,7 @@ class ActDesignWindow(QWidget):
 
         self.frame.setLayout(self.verticalLayout)
         self.layout_window = QVBoxLayout()
-        self.layout_window.addWidget(self.frame, Qt.AlignCenter)
+        self.layout_window.addWidget(self.frame, 0, Qt.AlignCenter)
         self.setLayout(self.layout_window)
 
         self.setAutoFillBackground(False)

@@ -252,6 +252,9 @@ class DPNote(QWidget):
             self.noteToLog.emit(icon, message)
 
     def play_audio(self, note_type, note_index):
+        # 全局音效开关：默认静音（设置中心可开）。灵石/事件等提示音全部走此通道
+        if not getattr(settings, 'sound_on', False):
+            return
         # 播放声音
         sound_key = self.icon_dict[note_type]['sound']
         sound_pty = self.sound_dict[sound_key]['priority']

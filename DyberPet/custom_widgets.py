@@ -157,10 +157,10 @@ class DPDialogue(QWidget):
         self.label.setFixedWidth(250)
         self.label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Minimum)
         self.horizontalLayout_2.addStretch()
-        self.horizontalLayout_2.addWidget(self.label, Qt.AlignCenter)
+        self.horizontalLayout_2.addWidget(self.label, 0, Qt.AlignCenter)
         self.horizontalLayout_2.addStretch()
 
-        self.verticalLayout.addLayout(self.horizontalLayout_2, Qt.AlignCenter)
+        self.verticalLayout.addLayout(self.horizontalLayout_2)
         spacerItem4 = QSpacerItem(20, 10, QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.verticalLayout.addItem(spacerItem4)
 
@@ -179,14 +179,14 @@ class DPDialogue(QWidget):
         self.OptionLayout.setSpacing(10)
         self.OptionGenerator(self.message['start'])
         self.horizontalLayout_3.addStretch()
-        self.horizontalLayout_3.addLayout(self.OptionLayout, Qt.AlignCenter)
+        self.horizontalLayout_3.addLayout(self.OptionLayout)
         self.horizontalLayout_3.addStretch()
-        self.verticalLayout.addLayout(self.horizontalLayout_3, Qt.AlignCenter)
+        self.verticalLayout.addLayout(self.horizontalLayout_3)
 
         self.frame.setLayout(self.verticalLayout)
         self.frame.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Minimum)
         self.layout_window = QVBoxLayout()
-        self.layout_window.addWidget(self.frame, Qt.AlignCenter) #, Qt.AlignHCenter | Qt.AlignTop)
+        self.layout_window.addWidget(self.frame, 0, Qt.AlignCenter) #, Qt.AlignHCenter | Qt.AlignTop)
         self.setLayout(self.layout_window)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Minimum)
 
@@ -273,14 +273,14 @@ class DPDialogue(QWidget):
                 self.message['relationship']['option_prev_end'] = [prev_text]
                 self.opts_dict[option_index] = DialogueButtom(self.tr('Back'), 'option_prev_end') ##################
                 self.opts_dict[option_index].clicked.connect(self.confirm)
-                self.OptionLayout.addWidget(self.opts_dict[option_index], Qt.AlignCenter)
+                self.OptionLayout.addWidget(self.opts_dict[option_index], 0, Qt.AlignCenter)
                 option_index += 1
 
         if text_key is not None:
             for option in self.message.get('relationship', {}).get(text_key, []):
                 self.opts_dict[option_index] = DialogueButtom(self.message[option], option) ##################
                 self.opts_dict[option_index].clicked.connect(self.confirm)
-                self.OptionLayout.addWidget(self.opts_dict[option_index], Qt.AlignCenter)
+                self.OptionLayout.addWidget(self.opts_dict[option_index], 0, Qt.AlignCenter)
                 option_index += 1
 
         if option_index == 0:

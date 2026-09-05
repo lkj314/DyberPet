@@ -53,6 +53,12 @@ class DaoYunWidget(QWidget):
         self._frame_idx = 0
         self._load_frames(pet_name)
 
+        # 拖动状态：区分「点击打开面板」与「拖动换位置」
+        self._drag_offset = None
+        self._dragging = False
+        self._press_gpos = None
+        self.setCursor(Qt.OpenHandCursor)
+
         self._pulse = QTimer(self)
         self._pulse.setInterval(60 if self._mode == self.FRAME_DRAW else 120)
         self._pulse.timeout.connect(self._tick_phase)
@@ -109,11 +115,45 @@ class DaoYunWidget(QWidget):
         self.setToolTip(text)
         self.update()
 
+    # ---- 位置与拖动 ----
+    def snap_bottom_right(self):
+        """固定到桌面右下角（贴角）。只在首次显示时调用，之后位置归用户拖动。"""
+        geo = QApplication.primaryScreen().availableGeometry()
+        self.move(geo.right() - self.width() - 8,
+                  geo.bottom() - self.height() - 8)
+
     def mousePressEvent(self, event):
-        try:
-            self._on_click()
-        except Exception:  # noqa: BLE001
-            pass
+        if event.button() == Qt.LeftButton:
+            self._drag_offset = event.globalPosition().toPoint() - self.pos()
+            self._press_gpos = event.globalPosition().toPoint()
+            self._dragging = False
+            self.setCursor(Qt.ClosedHandCursor)
+            event.accept()
+
+    def mouseMoveEvent(self, event):
+        if self._drag_offset is None:
+            return
+        gpos = event.globalPosition().toPoint()
+        if not self._dragging and (gpos - self._press_gpos).manhattanLength() > 6:
+            self._dragging = True
+        if self._dragging:
+            self.move(gpos - self._drag_offset)
+            event.accept()
+
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            was_click = not self._dragging
+            self._drag_offset = None
+            self._dragging = False
+            self._press_gpos = None
+            self.setCursor(Qt.OpenHandCursor)
+            if was_click:
+                # 位移极小 → 视为点击，打开历练面板
+                try:
+                    self._on_click()
+                except Exception:  # noqa: BLE001
+                    pass
+            event.accept()
 
     def paintEvent(self, event):
         p = QPainter(self)

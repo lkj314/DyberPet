@@ -18,6 +18,13 @@ chat_stt = False
 chat_stt_always_listen = False
 chat_voice = "云希(男·活力)"
 
+# [修仙世界] 世界模拟与日志流（角色面板·修仙世界页；原插件设置已迁入主配置）
+world_speed = "标准"          # 标准: 1世界年≈1小时 / 疾行≈30分钟 / 悠远≈3小时
+world_bubble_major = True     # L3 重大事件桌宠气泡提及
+world_notify_medium = False   # L2 中等事件系统通知（默认关，绝不吵）
+world_travel_log = True       # 本体游历琐事直播入流
+world_qiyu_choices = True     # 奇遇请示（抉择系统）
+
 if platform == 'win32':
     basedir = ''
     BASEDIR = ''
@@ -241,10 +248,14 @@ def init_settings():
 
     global gravity, fixdragspeedx, fixdragspeedy, tunable_scale, scale_dict, volume, \
            language_code, on_top_hint, default_pet, defaultAct, themeColor, minipet_scale, \
-           toaster_on, usertag_dict, auto_lock, bubble_on, \
+           toaster_on, usertag_dict, auto_lock, bubble_on, sound_on, \
            plugins_settings, \
            chat_model, chat_tts, chat_stt, chat_stt_always_listen, chat_voice, \
-           day_night_on, day_start, night_start
+           day_night_on, day_start, night_start, \
+           world_speed, world_bubble_major, world_notify_medium, \
+           world_travel_log, world_qiyu_choices, \
+           bangumi_notify, bangumi_remind_hour, bangumi_merge_notify, \
+           bangumi_persona_quip, bangumi_show_cover
 
     # check json file integrity
     try:
@@ -327,6 +338,10 @@ def init_settings():
         toaster_on = data_params.get('toaster_on', True)
         #=====================================================
 
+        # 全局音效开关（通知/事件提示音）。默认 False = 静音出厂
+        sound_on = bool(data_params.get('sound_on', False))
+        #=====================================================
+
         # v0.6.1 User Tag (how pet will call the user)
         usertag_dict_tmp = data_params.get('usertag_dict', {})
         usertag_dict = {}
@@ -362,6 +377,37 @@ def init_settings():
         chat_voice = data_params.get('chat_voice', '云希(男·活力)')
         #=====================================================
 
+        # [修仙世界] 世界模拟（原 xiuxian_world 插件设置一次性迁入主配置）
+        _old_world = plugins_settings.get('xiuxian_world', {})
+        world_speed = data_params.get(
+            'world_speed', _old_world.get('world_speed', '标准'))
+        world_bubble_major = bool(data_params.get(
+            'world_bubble_major', _old_world.get('bubble_major', True)))
+        world_notify_medium = bool(data_params.get(
+            'world_notify_medium', _old_world.get('notify_medium', False)))
+        world_travel_log = bool(data_params.get(
+            'world_travel_log', _old_world.get('travel_log', True)))
+        world_qiyu_choices = bool(data_params.get(
+            'world_qiyu_choices', _old_world.get('qiyu_choices', True)))
+        plugins_settings.pop('xiuxian_world', None)   # 插件已退役，键位清掉
+        #=====================================================
+
+        # [追番导航] Bangumi 每日放送（原 bangumi 插件设置一次性迁入主配置）
+        _old_bgm = plugins_settings.get('bangumi', {})
+        bangumi_notify = bool(data_params.get(
+            'bangumi_notify', _old_bgm.get('enable_notify', True)))
+        bangumi_remind_hour = int(data_params.get(
+            'bangumi_remind_hour', _old_bgm.get('remind_hour', 20) or 20))
+        bangumi_remind_hour = min(max(bangumi_remind_hour, 0), 23)
+        bangumi_merge_notify = bool(data_params.get(
+            'bangumi_merge_notify', _old_bgm.get('merge_notify', True)))
+        bangumi_persona_quip = bool(data_params.get(
+            'bangumi_persona_quip', _old_bgm.get('persona_quip', True)))
+        bangumi_show_cover = bool(data_params.get(
+            'bangumi_show_cover', _old_bgm.get('show_cover', True)))
+        plugins_settings.pop('bangumi', None)   # 插件已退役，键位清掉
+        #=====================================================
+
         # 迁移：nanbeige4.1:3b 思考型模型（解说/对话会空回复或泄露 prompt），自动切到 gemma3:4b。
         if plugins_settings.get('lol_companion', {}).get('model') == 'nanbeige4.1:3b':
             plugins_settings['lol_companion']['model'] = 'gemma3:4b'
@@ -385,6 +431,7 @@ def init_settings():
         tunable_scale = 1.0
         minipet_scale = defaultdict(dict)
         toaster_on = True
+        sound_on = False   # 全局音效默认关闭（出厂静音）
         bubble_on = True
         usertag_dict = {}
         auto_lock = False
@@ -393,16 +440,30 @@ def init_settings():
         chat_tts = True
         chat_stt = False
         chat_voice = '云希(男·活力)'
+        world_speed = '标准'
+        world_bubble_major = True
+        world_notify_medium = False
+        world_travel_log = True
+        world_qiyu_choices = True
+        bangumi_notify = True
+        bangumi_remind_hour = 20
+        bangumi_merge_notify = True
+        bangumi_persona_quip = True
+        bangumi_show_cover = True
     check_locale()
     save_settings()
 
 def save_settings():
     global file_path, set_fall, gravity, fixdragspeedx, fixdragspeedy, scale_dict, volume, \
            language_code, on_top_hint, default_pet, defaultAct, themeColor, minipet_scale, \
-           toaster_on, usertag_dict, auto_lock, bubble_on, \
+           toaster_on, usertag_dict, auto_lock, bubble_on, sound_on, \
            plugins_settings, \
            chat_model, chat_tts, chat_stt, chat_stt_always_listen, chat_voice, \
-           day_night_on, day_start, night_start
+           day_night_on, day_start, night_start, \
+           world_speed, world_bubble_major, world_notify_medium, \
+           world_travel_log, world_qiyu_choices, \
+           bangumi_notify, bangumi_remind_hour, bangumi_merge_notify, \
+           bangumi_persona_quip, bangumi_show_cover
 
     data_js = {'gravity':gravity,
                'set_fall': set_fall,
@@ -414,6 +475,7 @@ def save_settings():
                'volume':volume,
                'on_top_hint':on_top_hint,
                'toaster_on':toaster_on,
+               'sound_on':sound_on,
                'bubble_on':bubble_on,
                'plugins_settings':plugins_settings,
                'chat_model':chat_model,
@@ -421,6 +483,16 @@ def save_settings():
                'chat_stt':chat_stt,
                'chat_stt_always_listen':chat_stt_always_listen,
                'chat_voice':chat_voice,
+               'world_speed':world_speed,
+               'world_bubble_major':world_bubble_major,
+               'world_notify_medium':world_notify_medium,
+               'world_travel_log':world_travel_log,
+               'world_qiyu_choices':world_qiyu_choices,
+               'bangumi_notify':bangumi_notify,
+               'bangumi_remind_hour':bangumi_remind_hour,
+               'bangumi_merge_notify':bangumi_merge_notify,
+               'bangumi_persona_quip':bangumi_persona_quip,
+               'bangumi_show_cover':bangumi_show_cover,
                'default_pet':default_pet,
                'defaultAct':defaultAct,
                'language_code':language_code,

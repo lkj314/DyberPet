@@ -273,13 +273,13 @@ class QHangLabel(QWidget):
 
         self.label = QLabel(self.message)
         self.label.setStyleSheet(HangLabelStyle)
-        hbox_1.addWidget(self.label, Qt.AlignCenter)
+        hbox_1.addWidget(self.label, 0, Qt.AlignCenter)
 
         self.centralwidget = QFrame()
         self.centralwidget.setLayout(hbox_1)
         self.centralwidget.setStyleSheet(HangStyle)
         self.layout_window = QVBoxLayout()
-        self.layout_window.addWidget(self.centralwidget, Qt.AlignCenter)
+        self.layout_window.addWidget(self.centralwidget, 0, Qt.AlignCenter)
         self.setLayout(self.layout_window)
 
         self.adjustSize()
@@ -941,6 +941,37 @@ class SubPet(QWidget):
         self.timer.setTimerType(Qt.PreciseTimer)
         self.timer.timeout.connect(self.animation)
         self.timer.start(self.interact_speed)
+
+        # 留守模式：本体离场（历练 hide）时——停跟随、停随机动作、
+        # 固定右下角只播待机动画，并解锁拖动（原 follow_main_y 锁）
+        self.guard_mode = False
+        if self.isSubpet:
+            SUBPET_MANAGER.register_widget(self.curr_pet_name, self)
+
+    # ---- 留守模式 ----
+    def enter_guard_mode(self):
+        """本体离场：元婴（迷你宠物）留守——老实待在桌面右下角修炼。"""
+        if self.guard_mode:
+            return
+        self.guard_mode = True
+        self.stop_interact()
+        self.at_destination = True
+        self.act_name = 'Default'
+        self.current_img = self.pet_conf.default.images[0]
+        self.set_img()
+        # 固定到桌面右下角（最角落留给道韵分身，本宠在其左侧）
+        x = self.current_screen.right() - self.width() - 104
+        y = self.current_screen.bottom() - self.height() - 10
+        self.move(x, y)
+        self.destination = [x, y]
+        self.onfloor = 1
+        self.draging = 0
+
+    def exit_guard_mode(self):
+        """本体归来：恢复跟随与正常动作。"""
+        self.guard_mode = False
+        # 重置交互状态：留守期间动画循环被冻结，可能残留动作状态
+        self.start_interact(None)
         
     def _withdraw(self):
         self.acc_withdrawed.emit(self.pet_name)
@@ -953,6 +984,8 @@ class SubPet(QWidget):
 
     def closeEvent(self, event):
         # we don't need the notification anymore, delete it!
+        if self.isSubpet:
+            SUBPET_MANAGER.unregister_widget(self.curr_pet_name)
         self.closed_acc.emit(self.acc_index)
         self.deleteLater()
 
@@ -978,8 +1011,8 @@ class SubPet(QWidget):
             if self.draging:
                 return
             self._show_right_menu()
-        
-        if self.follow_main_y:
+
+        if self.follow_main_y and not self.guard_mode:
             return
         if event.button() == Qt.LeftButton:
             #print('activated')
@@ -1005,7 +1038,7 @@ class SubPet(QWidget):
         :param event:
         :return:
         """
-        if self.follow_main_y:
+        if self.follow_main_y and not self.guard_mode:
             return
         if Qt.LeftButton and self.is_follow_mouse:
             self.move(event.globalPos() - self.mouse_drag_pos)
@@ -1048,7 +1081,7 @@ class SubPet(QWidget):
         :param event:
         :return:
         """
-        if self.follow_main_y:
+        if self.follow_main_y and not self.guard_mode:
             return
         if event.button()==Qt.LeftButton:
 
@@ -1078,7 +1111,7 @@ class SubPet(QWidget):
 
                 self.onfloor=0
                 self.draging=0
-                if self.set_fall == 1:
+                if self.set_fall == 1 and not self.guard_mode:
 
                     self.dragspeedx=(self.mouseposx1-self.mouseposx3)/2*settings.fixdragspeedx
                     self.dragspeedy=(self.mouseposy1-self.mouseposy3)/2*settings.fixdragspeedy
@@ -1105,6 +1138,8 @@ class SubPet(QWidget):
 
     def update_main_pos(self, pos_x, pos_y):
         self.main_pos = [pos_x, pos_y]
+        if self.guard_mode:
+            return    # 留守中：只记录本体位置，不再跟随移动
         if self.follow_main:
             if self.follow_main_x and not self.follow_main_y:
                 direction_factor = 1 if self.anchor_to_main[0]>0 else -1
@@ -1569,8 +1604,13 @@ class SubPet(QWidget):
 
     def animation(self):
 
-        if self.follow_main:
+        if self.follow_main and not self.guard_mode:
             self._check_destination()
+
+        # 留守模式：完全静止——不跟随、不执行任何动作、帧停在当前
+        # （老实修炼；退出留守后 start_interact 恢复正常动画）
+        if self.guard_mode:
+            return
 
         if self.interact is None:
             if self.dist_listen:
@@ -1609,7 +1649,7 @@ class SubPet(QWidget):
                 self.interact_altered = False
             getattr(self,self.interact)(self.act_name)
         
-        if self.follow_main_y and not self.at_destination:
+        if self.follow_main_y and not self.at_destination and not self.guard_mode:
             if self.interact is None:
                 self.move_to_main()
 

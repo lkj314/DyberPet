@@ -803,7 +803,7 @@ class Tomato(QWidget):
         
         hbox_t1.addStretch()
         hbox_t1.addWidget(self.n_tomato_label1, Qt.AlignVCenter | Qt.AlignRight)
-        hbox_t1.addWidget(self.n_tomato, Qt.AlignCenter)
+        hbox_t1.addWidget(self.n_tomato, 0, Qt.AlignCenter)
         hbox_t1.addWidget(self.n_tomato_label2, Qt.AlignVCenter | Qt.AlignLeft)
         hbox_t1.addStretch()
         
@@ -841,7 +841,7 @@ class Tomato(QWidget):
         #vbox_t.addWidget(QHLine())
         vbox_t.addWidget(self.description)
         vbox_t.addLayout(hbox_t2)
-        #vbox_t.addLayout(hbox_t1, Qt.AlignCenter)
+        #vbox_t.addLayout(hbox_t1, 0, Qt.AlignCenter)
         vbox_t.addLayout(hbox_t)
         self.centralwidget.setLayout(vbox_t)
         self.layout_window = QVBoxLayout()
@@ -2805,9 +2805,9 @@ class QToaster(QFrame):
         #self.layout()
         hbox2 = QHBoxLayout()
         hbox2.setContentsMargins(0,0,5,0)
-        hbox2.addWidget(self.label, Qt.AlignLeft)
+        hbox2.addWidget(self.label, 0, Qt.AlignLeft)
         hbox.addLayout(hbox2)
-        #hbox.addWidget(self.label, Qt.AlignLeft) # | Qt.AlignVCenter)
+        #hbox.addWidget(self.label, 0, Qt.AlignLeft) # | Qt.AlignVCenter)
 
         if closable:
             self.closeButton = TransparentToolButton(FIF.CLOSE)

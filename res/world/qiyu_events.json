@@ -1,0 +1,398 @@
+[
+  {
+    "id": "qiyu_wolf", "title": "青玄狼", "weight": 12, "min_realm": 0,
+    "tone": "neutral",
+    "narrative": {
+      "low": ["在{loc}道旁遇一头受伤的{beast}，它虽有伤，眼中却有灵性。杀之可取妖丹，放之或结善缘。"],
+      "mid": ["{loc}深处，一头{beast}横卧道中，伤重难行，灵智却已开。取丹还是放行，只在一念。"],
+      "high": ["{loc}之上，一头{beast}以目光与你对视良久——它认得修士，也认得修士手中的剑。"]},
+    "choices": [
+      {"key": "kill", "text": "杀之取丹",
+       "result": {
+         "low": ["你叹了口气，收剑时那{beast}眼中灵光散去。妖丹入手，此事便这么定了。"],
+         "mid": ["一剑落下，灵光湮灭。妖丹温润，你却不似往日那般欢喜。"],
+         "high": ["神念落下时你顿了顿——千年修行不易，终究还是收了丹。"]},
+       "effects": {"exp": [120, 300], "stones": [40, 100],
+                   "karma": [-14, -6], "flag": "wolf_killed"},
+       "echo": {"event": "wolf_pack_revenge", "delay": [60, 150]}},
+      {"key": "spare", "text": "放生结缘",
+       "result": {
+         "low": ["你绕道而行，走出老远回头看，它还望着你这边。"],
+         "mid": ["你留下半瓶伤药，转身走了。身后似有低鸣，像是在谢。"],
+         "high": ["你以神念为它续了生机，它伏首三拜方去。"]},
+       "effects": {"karma": [8, 16], "stones": [0, 5], "flag": "wolf_spared"},
+       "echo": {"event": "wolf_spared_repay", "delay": [45, 120]}}]},
+
+  {
+    "id": "qiyu_chess", "title": "古树对弈", "weight": 10, "min_realm": 0,
+    "tone": "good",
+    "narrative": {
+      "low": ["{loc}古树下两位老者对弈，一局棋杀了半日不见胜负。"],
+      "mid": ["{loc}有古树，树下两位老者对弈，落子间隐有大道之音。"],
+      "high": ["{loc}古树之下，两位老者以山河为局、星子为子，你竟看得片刻入定。"]},
+    "choices": [
+      {"key": "watch", "text": "观棋不语",
+       "result": {
+         "low": ["你在旁静静看了半日，只觉心头一片澄澈，似有所悟。"],
+         "mid": ["一局观罢，行功周天竟自行流转三分，妙不可言。"],
+         "high": ["观至中盘你忽觉神游物外，醒来时老者已去，唯余棋盘上一枚白子。"]},
+       "effects": {"exp": [100, 260], "karma": [4, 8], "flag": "chess_watched"},
+       "echo": {"event": "chess_enlighten", "delay": [40, 100]}},
+      {"key": "tip", "text": "暗中指点中年人",
+       "result": {
+         "low": ["你传音指点那位中年人，他恍然落子，赢了此局——可那老者望向你时，眼底竟有一丝黯然。"],
+         "mid": ["中年人依你指点胜了棋局，留下一枚灵果谢你。老者抚须轻叹，飘然而去。"],
+         "high": ["你一念点拨，中年人反败为胜。灵果入手时你忽然明白：那局棋，本不该有人赢。"]},
+       "effects": {"item": "凝灵果", "karma": [-10, -4], "flag": "chess_tipped"},
+       "echo": {"event": "chess_tip_debt", "delay": [50, 120]}},
+      {"key": "drink", "text": "偷饮仙酒",
+       "result": {
+         "low": ["你趁二人不备偷饮了酒葫芦，酒烈如刀，被二人联手教训了一顿，鼻青脸肿。"],
+         "mid": ["那酒入喉如焚，你捂着脸逃出十里，耳畔犹闻两位老者大笑。"],
+         "high": ["仙酒入腹，法力乱窜，你被那一记蒲扇般的巴掌拍进了山溪里。"]},
+       "effects": {"exp": [30, 80], "injury": [0.75, 7200],
+                   "karma": [-6, -2], "flag": "chess_drunk"}}]},
+
+  {
+    "id": "qiyu_dying", "title": "落魄修士", "weight": 11, "min_realm": 0,
+    "tone": "good",
+    "narrative": {
+      "low": ["{loc}道旁倒着一位重伤的{person}，气息奄奄，怀里似有物什。"],
+      "mid": ["{loc}荒径上，一位{person}重伤伏地，见你来了，眼中燃起最后一点光。"],
+      "high": ["{loc}之外，神念扫见一名{person}血染衣襟，命悬一线。"]},
+    "choices": [
+      {"key": "save", "text": "倾囊相救",
+       "result": {
+         "low": ["你取出伤药为他护住心脉，又守了两日。他醒来千恩万谢，说来日必报。"],
+         "mid": ["三日守护，他从鬼门关前捡回一命。临别时他郑重记下了你的名号。"],
+         "high": ["你以自身修行为他续命七日。他跪地叩首：此恩没齿难忘。"]},
+       "effects": {"karma": [10, 18], "flag": "beggar_saved"},
+       "echo": {"event": "beggar_report", "delay": [60, 150]}},
+      {"key": "rob", "text": "趁火打劫",
+       "result": {
+         "low": ["你搜走了他怀中储物袋，头也不回地走了。身后咒骂声渐不可闻。"],
+         "mid": ["储物袋入手微沉。他挣扎着抬头看你，眼里最后一点光熄了。"],
+         "high": ["你取了袋中之物，留他自生自灭。修仙路远，人心比妖兽更冷。"]},
+       "effects": {"stones": [80, 200], "karma": [-16, -8], "flag": "beggar_robbed"},
+       "echo": {"event": "beggar_grudge", "delay": [70, 160]}},
+      {"key": "leave", "text": "视而不见",
+       "result": {
+         "low": ["你放缓脚步，终究没有停。修仙之人，各安天命罢了。"],
+         "mid": ["你掠过他身边时，谁也没有看谁。"],
+         "high": ["生死有命，你收了神念，御风而去。"]},
+       "effects": {"karma": [-3, 0], "flag": "beggar_ignored"}}]},
+
+  {
+    "id": "qiyu_ruin", "title": "上古洞府", "weight": 9, "min_realm": 1,
+    "tone": "neutral",
+    "narrative": {
+      "low": ["{loc}深处发现一处上古洞府，禁制斑驳，隐有宝光。"],
+      "mid": ["{loc}的地脉忽然一沉——地下藏着一座上古洞府，禁制残缺，机缘与凶险各半。"],
+      "high": ["{loc}之下，一座上古洞府的禁制在你神念前寸寸显形。"]},
+    "choices": [
+      {"key": "force", "text": "强闯禁制",
+       "result": {
+         "low": ["你硬撼禁制闯了进去，收获颇丰，只是被反噬震得气血翻涌。"],
+         "mid": ["禁制轰然洞穿，洞中遗藏尽入囊中，你也挂了彩。"],
+         "high": ["你以大神通碾碎禁制，取物而返——太过顺手，反倒生出一丝不安。"]},
+       "effects": {"exp": [150, 380], "stones": [60, 160],
+                   "injury": [0.7, 10800], "flag": "ruin_forced"}},
+      {"key": "study", "text": "细研禁制",
+       "result": {
+         "low": ["你退开三步，就着残缺禁制推演了三日，于阵道一道颇有进益。"],
+         "mid": ["七日推演，禁制的脉络在你识海里渐渐清晰。洞府未入，收获却未必更少。"],
+         "high": ["你以此阵证了自家大道一角，抚掌而笑。"]},
+       "effects": {"exp": [80, 200], "karma": [2, 6], "flag": "ruin_studied"},
+       "echo": {"event": "ruin_insight", "delay": [40, 90]}},
+      {"key": "report", "text": "报予宗门",
+       "result": {
+         "low": ["你把洞府方位报予了{sect}，宗门酬以灵石，还记了你一功。"],
+         "mid": ["{sect}遣人接手了洞府，酬谢从优，也承了你这份香火情。"],
+         "high": ["你一纸传讯送往{sect}，上下一片哗然。宗主亲笔信函致谢，礼单厚重。"]},
+       "effects": {"stones": [100, 260], "karma": [6, 12],
+                   "flag": "ruin_reported"}}]},
+
+  {
+    "id": "qiyu_debt", "title": "故人借银", "weight": 9, "min_realm": 0,
+    "tone": "neutral",
+    "narrative": {
+      "low": ["一位旧识寻上门来，欲借五百灵石救急，说好来日连本带利奉还。"],
+      "mid": ["{person}登门，吞吞吐吐半晌，才开口借五百灵石——他家中小辈等着丹药救命。"],
+      "high": ["{person}深夜到访，只为借五百灵石渡劫。以你们的交情，这钱借与不借，都是一道题。"]},
+    "choices": [
+      {"key": "lend", "text": "借出灵石",
+       "result": {
+         "low": ["你数出五百灵石递过去。他红着眼眶收下，留了字据。"],
+         "mid": ["灵石交割，他郑重一拜：他日必加倍奉还。"],
+         "high": ["你另封了二百灵石一并塞给他：拿去，别耽误了孩子。"]},
+       "effects": {"karma": [8, 14], "flag": "stone_lent"},
+       "echo": {"event": "stone_debt_return", "delay": [50, 130]}},
+      {"key": "refuse", "text": "婉言回绝",
+       "result": {
+         "low": ["你说手头也紧，他笑了笑说理解，起身走了。"],
+         "mid": ["你推说洞府清苦。他没再开口，那点旧交情淡了三分。"],
+         "high": ["你静坐半晌，终究没有应。有些债，借出去收不回的是灵石，也可能是道心。"]},
+       "effects": {"karma": [-2, 0], "flag": "stone_refused"}}]},
+
+  {
+    "id": "qiyu_thief", "title": "梁上君子", "weight": 9, "min_realm": 0,
+    "tone": "evil",
+    "narrative": {
+      "low": ["夜宿{loc}，你察觉有窃贼摸进了邻家院落。"],
+      "mid": ["{loc}坊市深处，一条黑影正从铺面后墙翻出，怀里鼓鼓囊囊。"],
+      "high": ["{loc}夜里，神念轻易锁住了那个自以为隐匿的{person}。"]},
+    "choices": [
+      {"key": "catch", "text": "拿送官府",
+       "result": {
+         "low": ["你一把拎住那贼送去见官，得了些悬赏。"],
+         "mid": ["窃贼在你手里挣了三挣没挣脱，坊市管事千恩万谢，赏钱奉上。"],
+         "high": ["你连人带赃一并摄至管事面前。一夜之间，{loc}都传遍了。"]},
+       "effects": {"stones": [60, 150], "karma": [4, 10], "flag": "thief_caught"}},
+      {"key": "free", "text": "放其一马",
+       "result": {
+         "low": ["你只当没看见。江湖险恶，各自谋生罢了。"],
+         "mid": ["那贼冲你遥遥一揖，消失在夜色里。你心里说不清是什么滋味。"],
+         "high": ["你收回神念，任他去了。强者为尊的世界，谁又比谁干净多少。"]},
+       "effects": {"karma": [-8, -3], "flag": "thief_freed"},
+       "echo": {"event": "thief_backfire", "delay": [60, 140]}},
+      {"key": "share", "text": "坐地分赃",
+       "result": {
+         "low": ["你拦下他分了三成，挥手放行。他连连称谢，你还算满意。"],
+         "mid": ["五五分账。他喊你一声好汉，你收了灵石没接话。"],
+         "high": ["你分走大半，留他几件遮口。这笔账，天道记着呢。"]},
+       "effects": {"stones": [120, 300], "karma": [-14, -6], "flag": "thief_shared"},
+       "echo": {"event": "stolen_karma", "delay": [80, 180]}}]},
+
+  {
+    "id": "qiyu_relic", "title": "坊市拾遗", "weight": 9, "min_realm": 0,
+    "tone": "good",
+    "narrative": {
+      "low": ["{loc}石阶上静静躺着一件{item}，四下无人。"],
+      "mid": ["你在{loc}拾得一件{item}，灵光内蕴，失主想必找得着急。"],
+      "high": ["神念一扫，{loc}人流中那件{item}的主人正焦急折返。"]},
+    "choices": [
+      {"key": "return", "text": "寻还失主",
+       "result": {
+         "low": ["你在原地守了半个时辰，失主寻来时千恩万谢。"],
+         "mid": ["失主是一位{sect}修士，执意以灵石相谢，你推辞不过收了些。"],
+         "high": ["物归原主。他记下了你的名号：{sect}上下，从此认得你这个人。"]},
+       "effects": {"karma": [8, 15], "stones": [20, 60], "flag": "relic_returned"},
+       "echo": {"event": "relic_owner_thanks", "delay": [45, 110]}},
+      {"key": "keep", "text": "归为己有",
+       "result": {
+         "low": ["四下无人，你收起{item}快步离开。"],
+         "mid": ["{item}入手微温。你告诉自己是捡的，不是偷的。"],
+         "high": ["你收了那件{item}。修行日久，你知道这心念意味着什么。"]},
+       "effects": {"item": "无主灵物", "karma": [-8, -3], "flag": "relic_kept"}},
+      {"key": "sell", "text": "转手卖出",
+       "result": {
+         "low": ["你把{item}卖给了坊市铺子，换了一袋灵石。"],
+         "mid": ["铺主压了压价，你还是出手了。灵石是真，心安是假。"],
+         "high": ["灵石入袋，你却总觉得身后有人望着。"]},
+       "effects": {"stones": [100, 240], "karma": [-10, -4], "flag": "relic_sold"}}]},
+
+  {
+    "id": "qiyu_scroll", "title": "残破功法", "weight": 8, "min_realm": 0,
+    "tone": "neutral",
+    "narrative": {
+      "low": ["{loc}废墟里翻出半卷功法残篇，字迹古朴。"],
+      "mid": ["{loc}旧书摊的角落里，一卷残篇在你灵识下泛起微光——竟是真本。"],
+      "high": ["{loc}遗迹深处，你认出了那半卷功法：是失传已久的真本。"]},
+    "choices": [
+      {"key": "study", "text": "自行参悟",
+       "result": {
+         "low": ["你如获至宝，就着残篇参详数日，于行气一道多有印证。"],
+         "mid": ["残缺处你以自身道途补全，竟隐隐自成一格。"],
+         "high": ["半卷残篇，被你读出了整部大道的影子。"]},
+       "effects": {"exp": [150, 400], "flag": "scroll_studied"},
+       "echo": {"event": "scroll_insight", "delay": [60, 140]}},
+      {"key": "sell", "text": "转售书坊",
+       "result": {
+         "low": ["你把残篇卖给了{loc}书坊，换了一笔厚酬。"],
+         "mid": ["书坊掌柜眼睛都直了，当场付清。"],
+         "high": ["灵石虽厚，你总觉得那卷书该遇到真正读它的人。"]},
+       "effects": {"stones": [180, 420], "flag": "scroll_sold"}},
+      {"key": "donate", "text": "捐予藏经阁",
+       "result": {
+         "low": ["你把残篇捐给了{sect}藏经阁，阁主亲自道谢，赠灵石为酬。"],
+         "mid": ["{sect}藏经阁为你记名一功，礼数周全。"],
+         "high": ["残篇归阁那日，{sect}多位长老出面相谢——失传之本，重光有日。"]},
+       "effects": {"stones": [60, 140], "karma": [6, 12],
+                   "flag": "scroll_donated"}}]},
+
+  {
+    "id": "qiyu_tide", "title": "妖潮余波", "weight": 8, "min_realm": 1,
+    "tone": "good",
+    "narrative": {
+      "low": ["妖潮刚过，{loc}一片狼藉，几名修士还在追杀零星{beast}。"],
+      "mid": ["{loc}战后未靖，{beast}余孽流窜，戍守的修士人手捉襟见肘。"],
+      "high": ["{loc}妖潮初退，百里焦土上灵气紊乱，正是多事之秋。"]},
+    "choices": [
+      {"key": "fight", "text": "助战妖潮",
+       "result": {
+         "low": ["你留下与众人并肩清剿，酣战半日，妖氛尽扫。"],
+         "mid": ["一场恶战，你与几位同道结了袍泽之谊，各自带伤。"],
+         "high": ["你一人镇住一股妖流，戍卒望你如望城垣。"]},
+       "effects": {"exp": [200, 450], "injury": [0.75, 14400],
+                   "karma": [10, 18], "flag": "tide_fought"},
+       "echo": {"event": "tide_comrade", "delay": [50, 120]}},
+      {"key": "gather", "text": "趁乱采药",
+       "result": {
+         "low": ["战圈之外灵药被惊得四散，你捡漏采了一篓。"],
+         "mid": ["妖血滋养过的灵药品相极好，你满载而归，只是心里略过意不去。"],
+         "high": ["你绕开战团，专挑天材地宝下手。各凭本事，只是这本事说出去不体面。"]},
+       "effects": {"item": "妖潮灵药", "stones": [80, 200],
+                   "karma": [-6, -2], "flag": "tide_gathered"}},
+      {"key": "detour", "text": "绕道而行",
+       "result": {
+         "low": ["你远远绕开是非之地，继续赶路。"],
+         "mid": ["多走了三日冤枉路，倒是太平。"],
+         "high": ["你御风绕行千里。高处望见烽烟，终究只是望了望。"]},
+       "effects": {"flag": "tide_avoided"}}]},
+
+  {
+    "id": "qiyu_quarrel", "title": "故人争执", "weight": 8, "min_realm": 0,
+    "tone": "neutral",
+    "narrative": {
+      "low": ["{loc}茶棚下，{person}正与人争执，眼看要动手。"],
+      "mid": ["{loc}道旁，{person}与一名{sect}修士吵得面红耳赤，各执一词。"],
+      "high": ["神念里，{person}与人的那场口角，正一步步逼向拔剑的边缘。"]},
+    "choices": [
+      {"key": "help", "text": "为故人出头",
+       "result": {
+         "low": ["你站了过去，对方悻悻而去。{person}连声道谢。"],
+         "mid": ["你几句话压下了场面。{person}抹了把汗：够朋友！"],
+         "high": ["你一现身，那边的气焰立刻矮了半截。{person}自此逢人便夸你。"]},
+       "effects": {"karma": [3, 8], "flag": "quarrel_helped"},
+       "echo": {"event": "friend_favor", "delay": [50, 120]}},
+      {"key": "mediate", "text": "居中调停",
+       "result": {
+         "low": ["你各打五十大板，又各自递了台阶，一场干戈化于茶碗之间。"],
+         "mid": ["听罢两边因果，你居中说和，竟真让两人交换了玉简。"],
+         "high": ["三言两语，你把一场你死我活说成了一炷香的误会。"]},
+       "effects": {"exp": [60, 140], "karma": [6, 12],
+                   "flag": "quarrel_mediated"}},
+      {"key": "watch", "text": "袖手旁观",
+       "result": {
+         "low": ["你低头喝茶，看他们吵。跟你没关系。"],
+         "mid": ["这场争执与你无关，你起身时他们还在吵。"],
+         "high": ["你收了神念。修行人的因果，旁人替不了。"]},
+       "effects": {"karma": [-3, 0], "flag": "quarrel_watched"}}]},
+
+  {
+    "id": "qiyu_spring", "title": "灵泉异动", "weight": 8, "min_realm": 0,
+    "tone": "neutral",
+    "narrative": {
+      "low": ["{loc}有一眼灵泉，泉底偶有宝光闪动。"],
+      "mid": ["{loc}灵泉夜半泛起异彩，泉眼深处似有什么在缓缓苏醒。"],
+      "high": ["{loc}灵泉之上，你听见水底传来一声悠远的呼吸。"]},
+    "choices": [
+      {"key": "drink", "text": "掬泉而饮",
+       "result": {
+         "low": ["泉水甘冽入腹，周身一轻，竟洗去几分浊气。"],
+         "mid": ["一捧泉水下肚，经脉里的滞涩松动了三分。"],
+         "high": ["饮罢清泉，你于水行一道若有所悟。"]},
+       "effects": {"exp": [120, 300], "flag": "spring_drunk"}},
+      {"key": "draw", "text": "汲水携归",
+       "result": {
+         "low": ["你灌满一只玉瓶，泉水澄澈，回去慢慢研究。"],
+         "mid": ["玉瓶封存泉水，瓶身至今微凉。"],
+         "high": ["你取走一缕泉眼深处的本源之水，泉面轻轻荡了荡。"]},
+       "effects": {"item": "灵泉水", "flag": "spring_drew"}},
+      {"key": "guard", "text": "为泉护法",
+       "result": {
+         "low": ["你守在泉边驱走几只窥伺的{beast}，泉光温和地亮了亮，像在道谢。"],
+         "mid": ["三日夜护持，泉底异动平息。你离开时，泉面凝出一粒珍珠似的东西。"],
+         "high": ["你为它挡下一拨又一拨觊觎。临行前，水中似有一道目光，深深记住了你。"]},
+       "effects": {"stones": [40, 100], "karma": [8, 15], "flag": "spring_guarded"},
+       "echo": {"event": "spring_spirit", "delay": [60, 150]}}]},
+
+  {
+    "id": "qiyu_map", "title": "残破藏宝图", "weight": 8, "min_realm": 0,
+    "tone": "neutral",
+    "narrative": {
+      "low": ["你从一处废墟里翻出半张藏宝图，墨迹指往{loc}深处。"],
+      "mid": ["一具枯骨手里攥着半张图，终点的红圈落在大{loc}境内。"],
+      "high": ["那半张图在你识海里拼合完整——图的尽头，是{loc}。"]},
+    "choices": [
+      {"key": "dig", "text": "按图寻宝",
+       "result": {
+         "low": ["你循图寻了半月，竟真挖出一处前人藏宝窖，收获远超路费。"],
+         "mid": ["窖藏出土那日你还有些恍惚：枯骨攒了一辈子的东西，如今归了你。"],
+         "high": ["图是真的，宝是真的，你也为那位前人立了碑。"]},
+       "effects": {"stones": [200, 500], "karma": [-2, 0], "flag": "map_dug"},
+       "echo": {"event": "map_dig_tale", "delay": [60, 140]}},
+      {"key": "sell", "text": "转手售出",
+       "result": {
+         "low": ["你把图卖给了{loc}的掮客，钱货两清，真假与他无关。"],
+         "mid": ["掮客验了半日，付了个不低的价。"],
+         "high": ["图出手了。听说买主去了{loc}，再没回来。"]},
+       "effects": {"stones": [120, 280], "flag": "map_sold"}},
+      {"key": "burn", "text": "一把火烧了",
+       "result": {
+         "low": ["你盯着图看了半晌，把它投进了火盆。多少人为一张纸送命。"],
+         "mid": ["火舌卷过图纸。你忽然觉得这半月来心头的躁动一并烧没了。"],
+         "high": ["藏宝图化为灰烬。你转身继续赶路，脚步比来时轻。"]},
+       "effects": {"karma": [2, 5], "flag": "map_burned"}}]},
+
+  {
+    "id": "qiyu_fallen", "title": "崖下遗蜕", "weight": 7, "min_realm": 0,
+    "tone": "good",
+    "narrative": {
+      "low": ["{loc}崖下发现一具修士遗蜕，储物袋还在腰间。"],
+      "mid": ["{loc}绝壁之下，那位修士陨落约有些年头了，随身之物俱在。"],
+      "high": ["神念抚过{loc}崖底：遗蜕保存完好，生前修为不低。"]},
+    "choices": [
+      {"key": "bury", "text": "立冢掩埋",
+       "result": {
+         "low": ["你搬石为冢，掩了遗蜕，替他把储物袋一并葬了。"],
+         "mid": ["葬毕你默立片刻：修行人，谁都不想曝骨荒野。"],
+         "high": ["你以剑气削碑刻其名讳（从玉牌上辨认的），又布下一座小小的聚灵阵。"]},
+       "effects": {"karma": [10, 18], "flag": "fallen_buried"},
+       "echo": {"event": "fallen_heir_thanks", "delay": [60, 140]}},
+      {"key": "loot", "text": "取其遗物",
+       "result": {
+         "low": ["你解下储物袋。死人不缺这个，活人缺。"],
+         "mid": ["袋中之物比你一年开销还多。你没再看那遗蜕一眼。"],
+         "high": ["你收了遗物，也记下了他玉牌上的名字——不为祭奠，是怕他那身功法的主人找来。"]},
+       "effects": {"stones": [150, 350], "karma": [-14, -6],
+                   "flag": "fallen_looted"},
+       "echo": {"event": "fallen_grudge", "delay": [80, 180]}},
+      {"key": "deliver", "text": "送信故里",
+       "result": {
+         "low": ["你从玉牌里辨出名号，寻到他故里的亲族，交还遗物。对方哭谢不止，奉上酬金。"],
+         "mid": ["千里送还，其家人执礼极恭。你只收了些盘缠。"],
+         "high": ["你亲手把人送回了故土。他族人立誓：此恩世代不忘。"]},
+       "effects": {"karma": [8, 14], "stones": [80, 180],
+                   "flag": "fallen_delivered"}}]},
+
+  {
+    "id": "qiyu_caravan", "title": "商队邀护卫", "weight": 8, "min_realm": 0,
+    "tone": "neutral",
+    "narrative": {
+      "low": ["{loc}道上，一支商队的掌柜凑上前来：这条道近来不太平，想请道友护送一程。"],
+      "mid": ["{loc}外，商队掌柜开价请你护卫过山道——近来{beast}伤人的传闻不少。"],
+      "high": ["{loc}道口，那位掌柜一眼认出你的修为，报价报价，加到了三倍。"]},
+    "choices": [
+      {"key": "accept", "text": "应允护卫",
+       "result": {
+         "low": ["你随行护送，一路太平。掌柜如约付酬，还留了以后再合作的口子。"],
+         "mid": ["途中惊走两头{beast}，货单人安。掌柜塞了双份酬金。"],
+         "high": ["你只是坐在车头喝了七天茶，沿线妖邪闻风远遁。掌柜逢人便吹嘘这段交情。"]},
+       "effects": {"stones": [160, 380], "karma": [2, 6],
+                   "flag": "caravan_guarded"},
+       "echo": {"event": "caravan_contact", "delay": [50, 130]}},
+      {"key": "bargain", "text": "坐地起价",
+       "result": {
+         "low": ["你把酬金抬高一倍。掌柜咬咬牙认了，肉痛写在脸上。"],
+         "mid": ["三倍价成交。护卫是护卫，账是账。"],
+         "high": ["你开出十倍价。掌柜脸色变了变，还是递上了储物袋。"]},
+       "effects": {"stones": [260, 560], "karma": [-6, -2],
+                   "flag": "caravan_bargained"}},
+      {"key": "refuse", "text": "婉拒赶路",
+       "result": {
+         "low": ["你摆手告辞，商队另寻人手去了。"],
+         "mid": ["你有你的行程。掌柜拱手道别，各自前路。"],
+         "high": ["你御风远去，没回头。"]},
+       "effects": {"flag": "caravan_refused"}}]}
+]

@@ -80,7 +80,7 @@ class CultiCard(SimpleCardWidget):
         img = _pet_image(settings.petname)
         if img is not None:
             self.pfpLabel = AvatarImage(img, edge_size=80, frameColor="#ffffff")
-            self.hBoxLayout.addWidget(self.pfpLabel, Qt.AlignVCenter)
+            self.hBoxLayout.addWidget(self.pfpLabel, 0, Qt.AlignVCenter)
 
         vBox = QVBoxLayout()
         vBox.setContentsMargins(0, 4, 0, 4)
@@ -102,11 +102,9 @@ class CultiCard(SimpleCardWidget):
         self.expBar.setMaximum(10000)
         self.expBar.setFormat('')
         self.expBar.setAlignment(Qt.AlignCenter)
-        self.expBar.setFixedHeight(15)
-        expRow.addWidget(expText)
-        expRow.addStretch(1)
-        expRow.addWidget(self.expBar, 1, Qt.AlignLeft | Qt.AlignVCenter)
-        expRow.addStretch(1)
+        self.expBar.setFixedHeight(18)
+        expRow.addWidget(expText, 0, Qt.AlignVCenter)
+        expRow.addWidget(self.expBar, 1, Qt.AlignVCenter)
 
         self.rateLabel = CaptionLabel('——')
         setFont(self.rateLabel, 13, QFont.Normal)
@@ -116,16 +114,14 @@ class CultiCard(SimpleCardWidget):
         self.statusLabel.setStyleSheet('color: gray;')
 
         vBox.addStretch(1)
-        vBox.addWidget(self.realmLabel, Qt.AlignLeft | Qt.AlignVCenter)
+        vBox.addWidget(self.realmLabel)
         vBox.addWidget(HorizontalSeparator(QColor(20, 20, 20, 125), 1))
         vBox.addLayout(expRow)
-        vBox.addWidget(self.rateLabel, Qt.AlignLeft | Qt.AlignVCenter)
-        vBox.addWidget(self.statusLabel, Qt.AlignLeft | Qt.AlignVCenter)
+        vBox.addWidget(self.rateLabel)
+        vBox.addWidget(self.statusLabel)
         vBox.addStretch(1)
 
-        self.hBoxLayout.addStretch(1)
-        self.hBoxLayout.addLayout(vBox, Qt.AlignLeft | Qt.AlignVCenter)
-        self.hBoxLayout.addStretch(1)
+        self.hBoxLayout.addLayout(vBox, 1)
 
     def set_avatar(self, petname: str):
         """切换角色时重建头像。"""
@@ -136,7 +132,7 @@ class CultiCard(SimpleCardWidget):
             self.hBoxLayout.removeWidget(self.pfpLabel)
             self.pfpLabel.deleteLater()
         self.pfpLabel = AvatarImage(img, edge_size=80, frameColor="#ffffff")
-        self.hBoxLayout.insertWidget(0, self.pfpLabel, Qt.AlignVCenter)
+        self.hBoxLayout.insertWidget(0, self.pfpLabel, 0, Qt.AlignVCenter)
 
     def refresh(self, core):
         import time as _time
@@ -265,9 +261,9 @@ class AlchemyCard(SimpleCardWidget):
         hint = CaptionLabel('修炼产出灵石 → 炼丹产出丹药 → 服丹获得修行增益')
         setFont(hint, 12, QFont.Normal)
         hint.setStyleSheet('color: gray;')
-        titleRow.addWidget(title, Qt.AlignLeft | Qt.AlignVCenter)
+        titleRow.addWidget(title, 0, Qt.AlignLeft | Qt.AlignVCenter)
         titleRow.addStretch(1)
-        titleRow.addWidget(hint, Qt.AlignLeft | Qt.AlignVCenter)
+        titleRow.addWidget(hint, 0, Qt.AlignLeft | Qt.AlignVCenter)
         vBox.addLayout(titleRow)
 
         row = QHBoxLayout()
@@ -286,15 +282,15 @@ class AlchemyCard(SimpleCardWidget):
         self.startBtn.setFixedWidth(110)
         self.startBtn.clicked.connect(self._on_start)
 
-        row.addWidget(self.recipeBox, Qt.AlignLeft | Qt.AlignVCenter)
+        row.addWidget(self.recipeBox, 0, Qt.AlignLeft | Qt.AlignVCenter)
         row.addWidget(self.detailLabel, 1, Qt.AlignLeft | Qt.AlignVCenter)
-        row.addWidget(self.startBtn, Qt.AlignRight | Qt.AlignVCenter)
+        row.addWidget(self.startBtn, 0, Qt.AlignRight | Qt.AlignVCenter)
         vBox.addLayout(row)
 
         self.statusLabel = CaptionLabel('丹炉空闲')
         setFont(self.statusLabel, 12, QFont.Normal)
         self.statusLabel.setStyleSheet('color: gray;')
-        vBox.addWidget(self.statusLabel, Qt.AlignLeft | Qt.AlignVCenter)
+        vBox.addWidget(self.statusLabel, 0, Qt.AlignLeft | Qt.AlignVCenter)
         self._on_recipe_changed(0)
 
     # ---- 交互 ----
@@ -402,6 +398,7 @@ class CultiLogCard(SimpleCardWidget):
         self.vBox = QVBoxLayout(self)
         self.vBox.setContentsMargins(15, 10, 15, 12)
         self.vBox.setSpacing(4)
+        self._text_w = max(200, card_w - 130)   # 日志正文固定宽（换行高度可算）
 
         title = StrongBodyLabel('修行日志')
         setFont(title, 14, QFont.DemiBold)
@@ -440,10 +437,16 @@ class CultiLogCard(SimpleCardWidget):
             setFont(textLabel, 13, QFont.Normal)
             textLabel.setWordWrap(True)
             textLabel.setStyleSheet(f'color: {color};')
+            # 固定正文宽度让换行在 adjustSize 前生效（否则行高按单行算，
+            # 卡片高度偏低 → 每条日志下半截被裁）
+            textLabel.setFixedWidth(max(200, self.width() - 130
+                                        if self.width() > 200
+                                        else self._text_w))
 
-            h.addWidget(timeLabel, Qt.AlignLeft | Qt.AlignVCenter)
-            h.addWidget(textLabel, 1, Qt.AlignLeft | Qt.AlignVCenter)
+            h.addWidget(timeLabel, 0, Qt.AlignVCenter)
+            h.addWidget(textLabel, 1, Qt.AlignVCenter)
             row.adjustSize()
+            row.setFixedHeight(max(row.sizeHint().height(), 24))
             self.vBox.addWidget(row)
             self._rows.append(row)
         self.adjustSize()

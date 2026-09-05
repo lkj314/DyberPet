@@ -1,0 +1,75 @@
+[
+  {"id": "combat_beast", "pool": "mishap", "weight": 20, "level": 1,
+   "effects": {"health": [-0.2, -0.03], "progress": [0.0, 0.02], "mood": [-10, 2]},
+   "log": {
+     "low": ["{name}在{loc}遇一头{beast}拦路，缠斗半日方才脱身。",
+             "{name}与{beast}斗了几个回合，被挠了一爪，总算赶跑了它。"],
+     "mid": ["{name}于{loc}遭{beast}伏击，斗法百合，斩兽而归，受了些皮外伤。",
+             "{name}撞上一头成精的{beast}，恶战一场，两败俱伤。"],
+     "high": ["{name}于{loc}遇袭，{beast}之王率群来犯，被其一掌拍散。",
+              "{name}一剑退了{beast}群，衣袂未乱，血未沾身。"]},
+   "death_cause": "被{beast}撕碎于{loc}"},
+
+  {"id": "combat_robbed", "pool": "mishap", "weight": 12, "level": 1,
+   "effects": {"stones": [-300, -30], "health": [-0.15, -0.02], "mood": [-12, -2]},
+   "log": {
+     "low": ["{name}在荒山被劫道的修士拦住，破财免灾，好不憋屈。",
+             "{name}遭了黑手，储物袋被摸去一半。"],
+     "mid": ["{name}于{loc}被劫道，怒而反击，伤敌自伤，损失不小。"],
+     "high": ["{name}遇劫，冷笑一声随手镇压，对方磕头如捣蒜。"]},
+   "death_cause": "被歹人灭口于{loc}荒道"},
+
+  {"id": "combat_duel", "pool": "mishap", "weight": 12, "level": 1,
+   "effects": {"health": [-0.12, 0.0], "mood": [-6, 8],
+               "progress": [0.0, 0.02]},
+   "log": {
+     "low": ["{name}与同门较技，输多赢少，回去加练了三个时辰。",
+             "{name}在{loc}与人斗法切磋，胜负参半，倒是涨了见识。"],
+     "mid": ["{name}受邀论道斗法，险胜一筹，名传{loc}。"],
+     "high": ["{name}于{loc}摆擂论道，{realm}威压之下无人敢应。"]}},
+
+  {"id": "combat_ambush", "pool": "mishap", "weight": 6, "level": 2,
+   "effects": {"health": [-0.35, -0.15], "mood": [-18, -6]},
+   "log": {
+     "low": ["{name}在{loc}被人埋伏，拼死突围，伤得不轻。",
+             "{name}遭人暗算，惊怒交加，连夜遁出百里。"],
+     "mid": ["{name}遭伏杀，法宝尽出方才脱身，心有余悸。",
+             "{name}于{loc}被人围杀，血战突围，扬言必报此仇。"],
+     "high": ["{name}遭數名修士伏杀，谈笑间尽数反杀，唯留一人回去传话。"]},
+   "death_cause": "伏杀身亡，殒于{loc}"},
+
+  {"id": "combat_nemesis", "pool": "mishap", "weight": 6, "level": 2,
+   "effects": {"health": [-0.3, -0.1], "mood": [-20, -8]},
+   "log": {
+     "low": ["{name}的旧仇寻上门来，一番恶斗，各自挂彩。",
+             "{name}被仇家堵在{loc}，好一场恶战才脱身。"],
+     "mid": ["{name}与宿敌狭路相逢，大战三百回合，不分胜负。"],
+     "high": ["{name}的千年宿敌寻上门，二人于{loc}上空斗得天崩地裂。"]},
+   "death_cause": "死于仇家之手"},
+
+  {"id": "combat_beast_win", "pool": "mishap", "weight": 10, "level": 1,
+   "effects": {"stones": [30, 200], "mood": [4, 12], "health": [-0.05, 0.0]},
+   "log": {
+     "low": ["{name}斩了一头{beast}，剥了皮卖了笔灵石，美滋滋。",
+             "{name}猎杀{beast}得手，妖丹入手，收获颇丰。"],
+     "mid": ["{name}荡平{loc}附近的{beast}巢穴，采药人都拍手称快。"],
+     "high": ["{name}出手荡清{loc}兽患，妖丹装了满满一囊。"]}},
+
+  {"id": "combat_poison", "pool": "mishap", "weight": 6, "level": 1,
+   "effects": {"health": [-0.2, -0.08], "mood": [-10, -3]},
+   "log": {
+     "low": ["{name}误食了{loc}的毒果子，上吐下泻，狼狈不堪。",
+             "{name}被瘴气毒虫所伤，昏沉了三日。"],
+     "mid": ["{name}中了奇毒，自行逼毒七日，元气大伤。",
+             "{name}在{loc}沾了毒沼，法力凝滞，险象环生。"],
+     "high": ["{name}以{realm}修为强行炼化奇毒，借毒悟道，因祸得福。"]}},
+
+  {"id": "combat_spared", "pool": "mishap", "weight": 5, "level": 1,
+   "effects": {"mood": [-4, 4], "flags": ["spared_foe"]},
+   "echo": {"delay": [60, 200], "event": "echo_spared_returns"},
+   "log": {
+     "low": ["{name}斗败一名敌手，见其哀求，心一软放走了。",
+             "{name}刀下留情，饶了那名偷袭的散修。"],
+     "mid": ["{name}击败{sect}弟子后未下杀手，拂袖而去。"],
+     "high": ["{name}一念之仁，放过了跪地求饶的挑衅者。"]}}
+]

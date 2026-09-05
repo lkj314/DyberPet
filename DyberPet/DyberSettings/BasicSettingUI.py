@@ -138,6 +138,16 @@ class SettingInterface(ScrollArea):
         self.VolumnCard.setValue(int(settings.volume*10))
         self.VolumnCard.slider.valueChanged.connect(self._VolumnChanged)
 
+        # 全局音效开关（默认关闭 = 静音出厂）
+        self.SoundOnCard = SwitchSettingCard(
+            QIcon(os.path.join(basedir, 'res/icons/system/speaker.svg')),
+            self.tr("Sound Effects"),
+            self.tr("When turned on, notification and event sound effects will play"),
+            parent=self.VolumnGroup
+        )
+        self.SoundOnCard.setChecked(bool(getattr(settings, 'sound_on', False)))
+        self.SoundOnCard.switchButton.checkedChanged.connect(self._SoundOnChanged)
+
         self.AllowToasterCard = SwitchSettingCard(
             QIcon(os.path.join(basedir, 'res/icons/system/popup.svg')),
             self.tr("Pop-up Toaster"),
@@ -444,6 +454,10 @@ class SettingInterface(ScrollArea):
 
     def _VolumnChanged(self, value):
         settings.volume = round(value*0.1, 3)
+        settings.save_settings()
+
+    def _SoundOnChanged(self, isChecked):
+        settings.sound_on = bool(isChecked)
         settings.save_settings()
 
     def _ScaleChanged(self, value):

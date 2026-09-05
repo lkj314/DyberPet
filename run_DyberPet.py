@@ -90,6 +90,17 @@ class DyberPetApp(QApplication):
         # Dashboard
         self.board = DashboardMainWindow()
 
+        # [修仙世界] 世界守护（主程序常驻，角色面板「修仙世界」页同源）
+        from DyberPet.world_daemon import start_daemon, get_daemon
+        self.world_daemon = start_daemon(self.p)
+        self.aboutToQuit.connect(self._stop_world)
+
+        # [追番导航] 提醒守护（主程序常驻，角色面板「追番导航」页同源）
+        from DyberPet.bangumi_daemon import start_daemon as start_bgm_daemon, \
+            stop_daemon as stop_bgm_daemon
+        self.bangumi_daemon = start_bgm_daemon(self.p)
+        self.aboutToQuit.connect(stop_bgm_daemon)
+
         # Midnight Timer
         self.current_date = QDate.currentDate()
         self.set_midnight_timer()
@@ -124,6 +135,7 @@ class DyberPetApp(QApplication):
         self.p.show_controlPanel.connect(self.conp.show_window)
         self.p.show_culti_page.connect(self.board.show_cultivation)
         self.p.show_adventure_page.connect(self.board.show_adventure)
+        self.p.show_world_page.connect(self.board.show_world)
 
         self.conp.gamesaveInterface.refresh_pet.connect(self.p.refresh_pet)
 
@@ -187,6 +199,15 @@ class DyberPetApp(QApplication):
         self.set_midnight_timer()  # Reset the timer for the next midnight
 
     # 插件退出清理由 self.aboutToQuit.connect(self.plugin_manager.stop_all) 统一处理
+
+    def _stop_world(self):
+        """退出时停世界守护（补算 + 落盘）。"""
+        daemon = getattr(self, 'world_daemon', None)
+        if daemon is not None:
+            try:
+                daemon.stop()
+            except Exception:
+                pass
 
     def _stop_chat(self):
         """退出时停止对话相关后台线程。"""

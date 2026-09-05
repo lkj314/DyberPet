@@ -205,6 +205,30 @@ class SubPet_Manager:
         # {subpet_name: {'anchor_x': int, 'width': int}}
         self.subpets = {}
         self.default_distance = 30
+        # 已打开迷你宠物（isSubpet）的窗口实例注册表 {pet_name: SubPet}
+        self.widgets = {}
+
+    def register_widget(self, subpet_name, widget):
+        """注册迷你宠物窗口实例（供本体离场留守等全局广播使用）。"""
+        self.widgets[subpet_name] = widget
+
+    def unregister_widget(self, subpet_name):
+        if subpet_name in self.widgets:
+            del self.widgets[subpet_name]
+
+    def set_guard_mode(self, enabled):
+        """广播留守模式：本体隐藏（如历练离场）时 True，回归时 False。
+
+        留守中的迷你宠物停止跟随与随机动作、固定右下角，并解锁拖动。
+        """
+        for widget in list(self.widgets.values()):
+            try:
+                if enabled:
+                    widget.enter_guard_mode()
+                else:
+                    widget.exit_guard_mode()
+            except Exception as e:  # noqa: BLE001
+                print(f'[SubPet_Manager] set_guard_mode({enabled}) error: {e!r}')
 
     def add_subpet(self, subpet_name, width):
         """

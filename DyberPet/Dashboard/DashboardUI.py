@@ -11,6 +11,8 @@ from qfluentwidgets import FluentIcon as FIF
 from .statusUI import statusInterface
 from .cultiUI import cultiInterface
 from .adventureUI import adventureInterface
+from .worldUI import worldInterface
+from .bangumiUI import bangumiInterface
 from .inventoryUI import backpackInterface
 from .shopUI import shopInterface
 from .taskUI import taskInterface
@@ -44,6 +46,8 @@ class DashboardMainWindow(FluentWindow):
         self.statusInterface = statusInterface(sizeHintdb=(minWidth, minHeight), parent=self)
         self.cultiInterface = cultiInterface(sizeHintdb=(minWidth, minHeight), parent=self)
         self.adventureInterface = adventureInterface(sizeHintdb=(minWidth, minHeight), parent=self)
+        self.worldInterface = worldInterface(sizeHintdb=(minWidth, minHeight), parent=self)
+        self.bangumiInterface = bangumiInterface(sizeHintdb=(minWidth, minHeight), parent=self)
         self.backpackInterface = backpackInterface(sizeHintdb=(minWidth, minHeight), parent=self)
         self.shopInterface = shopInterface(sizeHintdb=(minWidth, minHeight), parent=self)
         self.taskInterface = taskInterface(sizeHintdb=(minWidth, minHeight), parent=self)
@@ -67,6 +71,14 @@ class DashboardMainWindow(FluentWindow):
         self.addSubInterface(self.adventureInterface,
                              FIF.SEND,
                              '历练')
+        # 修仙世界（世界日志流/道友名帖/奇遇请示，紧跟历练）
+        self.addSubInterface(self.worldInterface,
+                             FIF.GLOBE,
+                             '修仙世界')
+        # 追番导航（Bangumi 每日放送/封面网格/更新提醒，紧跟修仙世界）
+        self.addSubInterface(self.bangumiInterface,
+                             FIF.MOVIE,
+                             '追番导航')
         self.addSubInterface(self.backpackInterface,
                              QIcon(os.path.join(basedir, "res/icons/Dashboard/backpack.svg")),
                              self.tr('Backpack'))
@@ -123,6 +135,16 @@ class DashboardMainWindow(FluentWindow):
         """打开角色面板并定位到「历练」页（道韵/传讯符点击入口）。"""
         self.show()
         self.switchTo(self.adventureInterface)
+
+    def show_world(self):
+        """打开角色面板并定位到「修仙世界」页（奇遇请示通知/守护欢迎入口）。"""
+        self.show()
+        self.switchTo(self.worldInterface)
+
+    def show_bangumi(self):
+        """打开角色面板并定位到「追番导航」页（更新提醒通知入口）。"""
+        self.show()
+        self.switchTo(self.bangumiInterface)
 
     def closeEvent(self, event):
         event.ignore()  # Ignore the close event
