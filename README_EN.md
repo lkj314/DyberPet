@@ -1,111 +1,54 @@
-<h1 align="center">
-  <img src="docs/app_icon.png" alt="DyberPet app icon" width="64" valign="middle"> 呆啵宠物  DyberPet<br>
-  <sup><sub>Put your favorite characters on your desktop — customize freely, with AI by your side.</sub></sup>
-</h1>
+<div align="center">
 
-<p align="center">
-  <b>🐾 Desktop Pet System</b>: animations, interactions, progression, tasks, shop features, and mini pets that make your characters truly live on your desktop.<br>
-  <b>✨ AI Assistant</b>: LLM-powered pet interactions for companion chat, to-do management, and daily assistance.<br>
-  <b>🧩 MOD Ecosystem</b>: freely extend and create characters, items, sounds, and mini pets.
-</p>
+<img src="docs/DyberPet.png" alt="DyberPet" width="260"/>
 
-<p align="center">
-  <a>
-    <img src="https://img.shields.io/github/license/ChaozhongLiu/DyberPet.svg">
-  </a>
+# DyberPet · AI Remastered
 
-  <a style="text-decoration:none">
-    <img src="https://img.shields.io/github/downloads/ChaozhongLiu/DyberPet/total.svg"/>
-  </a>
+**A desktop pet with fully local AI — cultivation, adventures and game companionship on your desktop, data never leaves your machine.**
 
-  <a style="text-decoration:none">
-    <img src="https://img.shields.io/badge/python-3.9+-blue.svg" />
-  </a>
+[![License](https://img.shields.io/github/license/lkj314/DyberPet.svg)](./LICENSE)
+[![Downloads](https://img.shields.io/github/downloads/lkj314/DyberPet/total.svg)](../../releases)
+![Version](https://img.shields.io/badge/DyberPet-v0.6.7--ai.1-green)
+![Python](https://img.shields.io/badge/python-3.12-blue)
+![Ollama](https://img.shields.io/badge/AI-local%20Ollama-black)
 
-  <a style="text-decoration:none">
-    <img src="https://img.shields.io/badge/DyberPet-v0.10.3-green.svg"/>
-  </a>
-</p>
+[简体中文](./README.md) · English
 
-<p align="center">
-English | <a href="README.md">简体中文</a>
-</p>
+**[📥 Download (Releases)](../../releases/latest)** · **[🛠️ Build Guide](./BUILD_GUIDE.md)**
 
-<p align="center">
-  <a href="https://github.com/ChaozhongLiu/DyberPet/releases/latest">Try Demo</a> |
-  <a href="docs/collection.md">Browse Characters & MODs</a> |
-  <a href="docs/art_dev.md">Read MOD Dev Docs</a>
-</p>
+</div>
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/ChaozhongLiu/DyberPet/main/docs/DyberPet.gif" alt="DyberPet interface demo" width="92%">
-</p>
+---
 
-## Why Try DyberPet
+## This is NOT an official DyberPet release
 
-- More than a pet overlay: it already works as a full desktop pet app with animation, interaction, progression, and task systems.
-- Highly moddable: pets, mini pets, items, food, and sounds can all be extended, with JSON-based configuration that is easy to start with.
-- AI is optional, not required: connect LLM features for an assistant-like experience, or use it as a complete desktop pet without AI.
+This project forked the open-source **DyberPet 0.6.7** (a pure desktop-pet framework) and has since evolved **entirely on its own**, with all AI capabilities built from scratch.
 
-## Project Status
+> **The route split in one sentence**: official v0.8+ moved to **cloud LLM channels** (OpenAI / Gemini / OpenRouter);
+> this repo sticks to **local Ollama AI** — no API keys, no usage billing, and your conversation data never leaves your computer.
 
-- **Latest version: v0.10.3**, with a packaged Windows build available in [Release](https://github.com/ChaozhongLiu/DyberPet/releases/tag/v0.10.3).
-- The repository is still maintained primarily in Chinese, but feedback and bug reports are welcome.
-- The LLM-related module is still under active development and is not yet fully open-sourced.
-- There are reposted mirrors on CSDN / GitCode that are not affiliated with this project. Please use this GitHub repository as the canonical source.
+## Features
 
-Please leave a ⭐ **STAR** if you like the project and want to follow future updates.
+| Module | What you get |
+|---|---|
+| 🐶 Desktop pet | Animations / dragging / feeding / affection / shop / day-night cycle (inherited from 0.6.7) |
+| ✨ AI chat | Multi-turn chat · TTS voice · offline speech input (vosk) · always-listening, all via local Ollama |
+| ✨ Plugin center | Plugin discovery / toggles / auto-rendered settings UI |
+| ✨ Cultivation | Idle EXP grind, **40 realms** from Qi Refining to True Immortal; breakthroughs, alchemy, spirit-stone economy |
+| ✨ Adventures | Frog-style away narratives: sword-flight departures, Nascent Soul guardian, realm expeditions |
+| ✨ Game buddy | Gomoku & Dou Dizhu with AI opponents and pet commentary |
+| ✨ League of Legends | LCU live commentary · end-of-game battle reports (team KDA → five cultivation realms) · auto accept / honor / back-to-lobby |
 
-:octocat: We are actively building out the LLM-related features and would welcome more contributors.  
-If you are interested in joining, feel free to [message me](https://space.bilibili.com/39307302).
+Character assets: **Han Li** (927 frames / 40 actions), **Yin Yue** (125 frames / 7 actions), sub-pets **Han Li Nascent Soul** & **Daoyun Nascent Soul**, and a *A Record of a Mortal's Journey to Immortality* pill pack.
 
+## Quick start
 
-## Try the Demo
-### Windows Users
-  Download the latest Release，double-click **``run_DyberPet.exe``**, that's it!
+1. Download `DyberPet-v*-win64.zip` from [**Releases**](../../releases/latest), unzip and run `DyberPet/DyberPet.exe` — no Python needed.
+2. Optional AI features: install [Ollama](https://ollama.com/), then `ollama pull gemma3:4b`.
+3. From source: `pip install -r requirements.txt && python run_DyberPet.py`.
 
-### Windows Terminal
-  Create a new **conda** environment 
-  ```
-  conda create --name Dyber_pyside python=3.9.18
-  conda activate Dyber_pyside
-  conda install -c conda-forge apscheduler
-  conda install -c conda-forge pynput
-  pip install PySide6-Fluent-Widgets==1.5.4 -i https://pypi.org/simple/
-  pip install pyside6==6.5.2
-  pip install tendo
-  ```
-  Download the repository，then run **``run_DyberPet.py``**.
-  
-### MacOS Users
-  Create a new **conda** environment  
-  ```
-  conda create --name Dyber_pyside python=3.9.18
-  conda activate Dyber_pyside
-  conda install -c conda-forge apscheduler
-  pip install pynput==1.7.6
-  pip install PySide6-Fluent-Widgets==1.5.4 -i https://pypi.org/simple/
-  pip install pyside6==6.5.2
-  pip install tendo
-  ```
-  Download the repository，then run **``run_DyberPet.py``**.
+Build the EXE yourself with `.venv\Scripts\python.exe build_dyber.py` — see [BUILD_GUIDE.md](./BUILD_GUIDE.md).
 
+## Credits & License
 
-
-
-## User Manual
-(Under construction)
-
-
-
-
-## Developer Manual
-(English version under construction)
-
-
-
-## Acknowledgement
-- Pictures in the Demo partially come from [daywa1kr](https://github.com/daywa1kr/Desktop-Cat)
-- Animation module reference: [yanji255](https://toscode.gitee.com/yanji255/desktop_pet/)  
-- Dragging and falling reference: [WolfChen1996](https://github.com/WolfChen1996/DesktopPet)
-
+Based on [ChaozhongLiu/DyberPet](https://github.com/ChaozhongLiu/DyberPet) (desktop-pet framework and part of the art), UI components by [PyQt-Fluent-Widgets](https://github.com/zhiyiYo/PyQt-Fluent-Widgets). For study purposes only; LoL automation operates the client UI only — use at your own risk. Licensed under [GPL-3.0](./LICENSE).
