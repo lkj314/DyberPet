@@ -1,7 +1,7 @@
 # DyberPet 魔改版 · 项目交接文档（HANDOVER）
 
 > **读者：接手本项目的 AI 助手 / 开发者。** 本文档是项目总入口，目标是让你在 10 分钟内建立全景认知、避开所有已知的坑。
-> 最后更新：2026-09-05（由协作 AI 基于仓库真实状态撰写，非凭记忆）
+> 最后更新：2026-09-06（由协作 AI 基于仓库真实状态撰写，非凭记忆）
 >
 > **文档地图（先看哪份）**：
 > | 文档 | 内容 |
@@ -29,11 +29,12 @@ taskkill /F /IM DyberPet.exe
 - **PowerShell 必须写 `.\.venv\Scripts\python.exe`**（少写 `.\` 会把 `.venv` 当模块名报错）。
 - 仓库自带 `.venv`（Python 3.12.10 + PySide6 6.11.2 + PyInstaller 6.22.2），**无需用户手动装任何东西**。
 
-**三条最高优先级禁令**：
+**四条最高优先级禁令**：
 
 1. ❌ **绝不**用裸 `pyinstaller` / `python -m PyInstaller` / 让用户 `pip install` 后裸跑——构建入口只有 `build_dyber.py` 这一条。
 2. ❌ **绝不**改 `DyberPet.spec`——它是副产物，构建脚本根本不读它；改打包配置只改 `build_dyber.py`。
 3. ❌ **绝不**因为"我的沙箱里 import PyInstaller 失败"就断定项目没法构建/让用户手动构建——用错了 Python。检查对象应该是 `U:\DyberPet\.venv\Scripts\python.exe`。
+4. ❌ **绝不**把生活/角色体验类功能做成"插件弹窗"（用户拍板两次）——像样的功能（追番导航、修仙世界等）必须是**角色面板一等页（Dashboard 路由页）**，core 逻辑进主程序模块，提醒调度进主程序守护。插件系统只放真正的小游戏/工具类（五子棋/斗地主/LoL 陪玩）。追番导航与修仙世界都经历了"插件→收编"的返工，别再走老路。
 
 **构建后必做一步（最容易丢用户数据的地方）**：构建脚本会把旧 `dist/DyberPet` 整体轮转成 `dist/DyberPet.old.<时间戳>/`，**用户的运行期存档（修为/好感/设置/记忆）全在里面**。必须把旧目录 `data/` 下的所有文件拷回新 `dist/DyberPet/data/`，并把 `settings.json` 的 `default_pet` 设为 `'韩立'`（用户指定的默认角色）。
 
@@ -49,10 +50,12 @@ taskkill /F /IM DyberPet.exe
 | **AI chat** | 多轮对话 + TTS 语音播报 + 离线语音输入（vosk）+ "始终聆听" | `DyberPet/pet_chat.py` |
 | **插件中心** | 插件发现/启停/settings_schema 自动渲染设置卡（switch/combo/slider 三种类型） | `DyberPet/plugin_system/` + `DyberSettings/PluginCenterUI.py` |
 | **修仙放置** | 挂机涨修为，炼气→真仙 40 阶，突破/顿悟/双修/丹药/炼丹，与商店货币（灵石）打通 | `cultivation_service.py` + `plugins/cultivation/` |
-| **世界冒险** | 旅行青蛙式缺席叙事：御剑离场、道韵元婴留守、传讯符、秘境历练 | `adventure_service.py` + `plugins/adventure/` |
+| **世界冒险** | 旅行青蛙式缺席叙事：御剑离场、道韵元婴留守、传讯符、秘境历练；**历练中可「中途召回」**（收益按已历练时长线性折算，避险不挂伤） | `adventure_service.py`（recall）+ `plugins/adventure/` + `Dashboard/adventureUI.py` |
+| **修仙世界** | 三线日志（游历直播/道友名帖/天下大事）+ NPC 人生模拟（会成长结仇老死）+ 奇遇抉择（**Ollama 自主判断，玩家做观察者**——气泡/通知回禀 + 面板「抉择志」回放；可关「抉择归它」回退玩家拍板） | `world_service.py` + `npc_simulator.py` + `content_engine.py` + `choice_service.py` + `world_daemon.py`（含 AI 决策器）+ `Dashboard/worldUI.py` |
+| **追番导航** | 新番导视（七日放送时间表）/新番目录/我的追番三 tab，B站 API 双源（wbi 签名），每日更新提醒守护 | `DyberPet/bangumi/` + `bangumi_daemon.py` + `Dashboard/bangumiUI.py` |
 | **游戏陪玩** | 五子棋、斗地主（AI 对手 + 桌宠吐槽 + 胜利联动修为/历练） | `plugins/gomoku/`、`plugins/doudizhu/` |
 | LoL 解说 | 读取 LCU API + Ollama 生成解说词（第一个插件，Phase 0 验证品） | `plugins/lol_companion/` |
-| 角色面板 | 角色状态/背包/商店/日常任务/动作管理/**修仙之路**/**历练** | `DyberPet/Dashboard/` |
+| 角色面板 | 角色状态/背包/商店/日常任务/动作管理/**修仙之路**/**历练**/**修仙世界**/**追番导航** | `DyberPet/Dashboard/` |
 | 系统面板 | 基础设置/游戏存档/道具/附属宠物/插件中心 | `DyberPet/DyberSettings/` |
 | 角色图鉴 | 右键菜单读取角色 info/ 展示封面/标签/介绍（借鉴官方 0.8.10） | `DyberPet/RoleGallery.py` |
 
@@ -86,14 +89,22 @@ U:\DyberPet\
 │   ├── persona_service.py   # ⭐ 人设 core（统一出口）：四层拼装 system prompt + 历练记忆
 │   ├── persona.json         # 出厂人设（韩立 L0+L1；用户可放 data/persona.json 覆盖）
 │   ├── adventure_service.py # ⭐ 冒险 core（纯逻辑无 Qt）：秘境状态机/成功率/结果掷定/传讯符
+│   ├── world_service.py     # ⭐ 修仙世界 core：三线日志/天下大事掷骰/双时钟补算（零 LLM）
+│   ├── npc_simulator.py     #   道友人生轨迹模拟（成长/结缘/结仇/死亡/回响）
+│   ├── content_engine.py    #   模板化内容引擎（事件模板×表述变体×上下文修饰 ≈8.6 万组合）
+│   ├── choice_service.py    #   抉择系统 core（奇遇请示/选项结算，数值 100% 规则）
+│   ├── world_daemon.py      #   修仙世界守护（随主程序启动；原 xiuxian_world 插件，v0.6.8 收编）
+│   ├── bangumi_daemon.py    #   追番提醒守护（每日更新提醒；原 bangumi 插件入口，v1.1 收编）
+│   ├── bangumi\             # ⭐ 追番导航 core：bili_client(B站API+wbi签名) / bgm_client / timeline(15天放送) / subscription(双源追番清单) / notifier / episode / bgm_calendar
 │   ├── plugin_system\       # 插件框架：base.py(Plugin 基类) / manager.py(发现启停) / api.py(PetAPI 门面)
 │   ├── plugins\             # 五个插件（见 §4）
-│   ├── Dashboard\           # ⭐ 角色面板（FluentWindow）：状态/背包/商店/任务/动作/修仙/历练
+│   ├── Dashboard\           # ⭐ 角色面板（FluentWindow）：状态/背包/商店/任务/动作/修仙/历练/修仙世界(worldUI)/追番导航(bangumiUI)
 │   └── DyberSettings\       # 系统面板（ControlMainWindow）：基础设置/插件中心/游戏存档…
 ├── res\                     # 全部资源（构建后 robocopy 同步到 exe 同级，按 cwd 加载！）
 │   ├── role\                # 角色：Kitty/ChrisKitty/银月/韩立/sys（散图帧 + act_conf.json/pet_conf.json）
 │   ├── pet\                 # 附属宠物：派蒙/韩立元婴
 │   ├── items\               # 道具包（FanRenXiuXianZhuan 丹药 19 种 = 商店/炼丹数据源）
+│   ├── world\               # 修仙世界事件数据（13 个 JSON：世界事件/奇遇/游历/名帖/回响/称号池…）
 │   ├── icons\               # 图标 + qss（Dashboard 和 Settings 各有 qss 目录）
 │   ├── language\            # language.json 多语言
 │   └── sounds\              # 音效
@@ -112,6 +123,8 @@ U:\DyberPet\
 ```
 settings.init() → QApplication → PetWidget(p) → DashboardMainWindow(board) 角色面板
                             ├→ ControlMainWindow(conp) 系统面板
+                            ├→ world_daemon.start_daemon(p)      # 修仙世界守护
+                            ├→ bangumi_daemon.start_daemon(p)    # 追番提醒守护
                             └→ __connectSignalToSlot():
        pet.show_controlPanel → conp.show_window
        pet.show_dashboard    → board.show_window        # 角色面板
@@ -122,15 +135,17 @@ settings.init() → QApplication → PetWidget(p) → DashboardMainWindow(board)
 
 **新页面/新信号的接线模式**：PetWidget 加 Signal → 插件经 `PetAPI` emit → run_DyberPet.py 连接到目标面板的 `show_xxx()`。改完要确认 run 里的连接没漏（这是"按钮点了没反应"的最常见原因）。
 
-### 3.2 core 服务三件套（主程序模块，非插件；插件间零依赖的关键）
+### 3.2 core 服务群（主程序模块，非插件；插件间零依赖的关键）
 
 | 服务 | 职责 | 谁在驱动 |
 |---|---|---|
 | `cultivation_service` | 修为数值（40 阶/突破 roll/顿悟/速率倍率/灵石/丹药效果/炼丹炉），时间戳差值结算 | cultivation 插件 5s tick；面板页只读 |
 | `persona_service` | AI 人设统一出口（L0 人设/L1 境界人格/L2 实时状态/L3 记忆 → system prompt），四种长度模式 | 各插件 LLM 前先问它 |
 | `adventure_service` | 秘历状态机（派出时一次掷定结果/传讯符时刻表/留守事件/历练志） | adventure 插件 5s tick |
+| `world_service`（+`npc_simulator`/`content_engine`/`choice_service`） | 修仙世界：三线日志掷骰/道友 NPC 人生模拟/模板化文本生成/抉择结算——**零 LLM 全规则**，关机补算 | world_daemon 随主程序启动 |
+| `bangumi/` 包 | 追番：B站 API 客户端（wbi 签名）/15 天放送时间线（30min 磁盘缓存）/双源追番清单/提醒检查 | bangumi_daemon 随主程序启动；面板页只读 |
 
-**设计不变式**：core 是唯一数值权威（`get_core()` 单例），插件只做 UI/演出/驱动；跨方事件（面板手动突破、游戏加修为、丹药服用）进 core 的 `pending` 队列，由插件 tick 统一 drain 演出——**单一驱动者**，避免两处结算打架。
+**设计不变式**：core 是唯一数值权威（`get_core()` 单例），插件只做 UI/演出/驱动；跨方事件（面板手动突破、游戏加修为、丹药服用）进 core 的 `pending` 队列，由插件 tick 统一 drain 演出——**单一驱动者**，避免两处结算打架。守护型 core（world_daemon/bangumi_daemon）由 `run_DyberPet.py` 启动/退出时 `start_daemon(pet)` / 退出钩子接管，不占插件槽位。
 
 ### 3.3 PetAPI 门面（插件能摸到的一切）
 
@@ -141,8 +156,8 @@ settings.init() → QApplication → PetWidget(p) → DashboardMainWindow(board)
 | | 角色面板 Dashboard | 系统面板 DyberSettings |
 |---|---|---|
 | 窗口类 | `DashboardMainWindow`（run 里叫 `board`） | `ControlMainWindow`（run 里叫 `conp`） |
-| 页面 | 角色状态/背包/商店/任务/动作/**修仙之路(cultiUI)**/**历练(adventureUI)** | 基础设置/插件中心/游戏存档… |
-| 定位 | **玩法详情页放这里**（用户拍板） | 纯系统设置，不放玩法页 |
+| 页面 | 角色状态/背包/商店/任务/动作/**修仙之路(cultiUI)**/**历练(adventureUI)**/**修仙世界(worldUI)**/**追番导航(bangumiUI)** | 基础设置/插件中心/游戏存档… |
+| 定位 | **玩法详情页放这里**（用户拍板两次） | 纯系统设置，不放玩法页 |
 | 查找陷阱 | 页面标题走 `tr('Status')`+语言文件翻译，**源码 grep 中文搜不到**——按目录/类名找 | 同左 |
 
 qfluentwidgets **`ExpandLayout.addWidget` 不重挂 parent**——进滚动布局的卡片必须 `parent=self.scrollWidget`，否则整页叠加+点击失效（踩过两次，诊断手法：offscreen `mapTo(window)` 几何探针 + `childAt` 命中测试）。
@@ -163,6 +178,8 @@ qfluentwidgets **`ExpandLayout.addWidget` 不重挂 parent**——进滚动布�
 
 **settings_schema 类型**：`switch` / `combo`（静态 options 或 `options_ref`）/ `slider`——PluginCenterUI 自动渲染，schema 是 UI 唯一真相源。
 
+**已退役的插件（别去 plugins/ 目录找）**：`bangumi`（追番导航，v1.1 收编为 `bangumi_daemon.py` + `Dashboard/bangumiUI.py` 一等页）与 `xiuxian_world`（修仙世界，v0.6.8 收编为 `world_daemon.py` + `Dashboard/worldUI.py`）——两者都是"生活/角色体验类"功能，按 §0 禁令 4 收编。`data/bangumi/` 存追番订阅与缓存（订阅档 `subscriptions.json` 双源格式，旧档自动迁移）。
+
 ---
 
 ## 5. 验证闭环（改代码后的标准流程，一步都别省）
@@ -179,6 +196,11 @@ set QT_QPA_PLATFORM=offscreen
 .venv\Scripts\python.exe tools\cultivation_test.py    # 12 组：节奏/突破/防作弊/400天长跑飞升
 .venv\Scripts\python.exe tools\adventure_test.py      # 12 组：公式/分布/传讯/离线/存档
 .venv\Scripts\python.exe tools\persona_probe.py       # 探针：离线预算 23 项（加 --online 可真连 Ollama）
+.venv\Scripts\python.exe tools\world_test.py          # 修仙世界：三线日志/NPC 轨迹/抉择结算
+.venv\Scripts\python.exe tools\world_daemon_test.py   # 世界守护：双时钟补算/演出节流
+.venv\Scripts\python.exe tools\bangumi_test.py        # 追番 52 用例：timeline/去重/双源CRUD/签名/notifier/三tab
+.venv\Scripts\python.exe tools\doudizhu_test.py       # 斗地主牌型/记牌回归
+::  UI 截图冒烟（offscreen 出图目检）：tools\ui_shot.py（追番页 fixture 数据，不污染 data/）
 
 :: 4) 构建
 taskkill /F /IM DyberPet.exe
@@ -201,7 +223,7 @@ taskkill /F /IM DyberPet.exe
 
 ---
 
-## 6. 近期里程碑（2026-09-04 ~ 09-05 两天大开发）
+## 6. 近期里程碑（2026-09-04 ~ 09-06 三天大开发）
 
 | 里程碑 | 内容 |
 |---|---|
@@ -213,6 +235,9 @@ taskkill /F /IM DyberPet.exe
 | **修仙放置 v1.2** | core 数值层 + 面板化（用户否决独立悬浮窗）+ 商店联动（灵石/炼丹/丹药效果） |
 | **人设系统** | persona_service 统一出口，三插件接入，探针测试锁稳定性 |
 | **世界冒险** | 缺席叙事全链（道韵元婴浮层/传讯符/历练页/生态咬合） |
+| **修仙世界 v0.6.8** | 三线日志 + NPC 人生模拟 + 奇遇抉择卡收编主程序（原 xiuxian_world 插件退役），`res/world/` 13 个事件数据 JSON |
+| **追番导航 v1.0→v1.3** | ① 按设计文档做插件 ② 用户报启动崩溃（addLayout 批量误改）③ **v1.1 收编一等页**（插件退役，用户定调"半成品"的教训）④ v1.2 B站双源（Bangumi.tv 被网络屏蔽）⑤ **v1.3 新番导视**：三 tab（导视/目录/追番）+ `pgc/web/timeline` 15 天放送 + wbi 签名，52 测试全绿，EXE 交付 |
+| **v0.6.9 召回 + AI 抉择** | ① 历练「中途召回」（收益线性折算/避险不挂伤/插件 tick 统一入账）② 奇遇抉择改 **Ollama 自主判断**（world_daemon 决策器：后台线程 persona decide mode → 信号回主线程 → choice_service 掷骰 → 三级汇报 + 抉择志回放；45s 看门狗强制收敛；`world_ai_decide` 开关可回退玩家拍板） |
 
 ---
 
@@ -222,21 +247,25 @@ taskkill /F /IM DyberPet.exe
 2. **构建三禁**：禁裸 pyinstaller、禁改 .spec、禁因沙箱缺包判"不能构建"。见 §0 与 BUILD_GUIDE §10。
 3. **构建后必迁移用户存档**：`dist/DyberPet.old.*/data/` → 新 `dist/DyberPet/data/`，`default_pet='韩立'`。漏了=用户修为/好感全丢。
 4. **玩法详情页进角色面板 Dashboard**，不进系统面板（用户明确拒绝过一次）。
-5. **数值只认 core**：修为/冒险数值 100% 代码掷骰，LLM 零参与决策；阶位由突破推进**绝不**由修为反查（会架空成功率机制）；演出克制（连破合并一场、无弹窗轰炸）。
-6. **Qt 坑四连**：QAudioOutput/QMediaPlayer 必须常驻成员（GC 静默吃声音）；Plugin 基类非 QObject（`QTimer(self)` 会崩，用无 parent + 实例持引用）；ExpandLayout 卡片必须 `parent=scrollWidget`；需要事件循环的媒体对象不在工作线程创建。
-7. **工具坑**：U 盘 Edit 有"报成功实未落盘"的假象，**改完必须 grep 验证**（大文件补丁优先用 python 脚本替换）；`py_compile` 只证明语法不崩，绝不当作"功能完成"；界面文案走 `tr()`+语言文件，**grep 中文找不到对应代码**，按目录/类名找。
+5. **数值只认 core**：修为/冒险/抉择数值 100% 代码掷骰；阶位由突破推进**绝不**由修为反查（会架空成功率机制）；演出克制（连破合并一场、无弹窗轰炸）。**LLM 可以做"人格化选项决策"**（奇遇遇上了选 A/B/C——2026-09-06 用户拍板"选择权归桌宠，玩家做观察者"），但**选项的数值结果仍 100% 由 choice_service 按区间掷骰**，LLM 零参与结算。
+6. **Qt 坑五连**：QAudioOutput/QMediaPlayer 必须常驻成员（GC 静默吃声音）；Plugin 基类非 QObject（`QTimer(self)` 会崩，用无 parent + 实例持引用）；ExpandLayout 卡片必须 `parent=scrollWidget`；需要事件循环的媒体对象不在工作线程创建；**addLayout/addItem 没有 alignment 参数**（只有 addWidget 是 3 参）——批量改布局调用绝不能套同一正则，改完 grep `addLayout\([^)]*,[^)]*,[^)]*\)` 复核（09-06 启动崩溃事故）。
+7. **工具坑**：U 盘 Edit 有"报成功实未落盘"的假象，**改完必须 grep 验证**（大文件补丁优先用 python 脚本替换）；**同一文件多处修改绝不能并行发 Edit（会互相覆盖丢改动，踩过两次）**——必须逐条串行；`py_compile` 只证明语法不崩，绝不当作"功能完成"；界面文案走 `tr()`+语言文件，**grep 中文找不到对应代码**，按目录/类名找。
 8. **叙事/人设缰绳**：LLM 只讲故事不碰数值；prompt 喂事实清单（模板+变量），明令不报数字；预设文案永远是兜底（离线也有故事）；改 persona prompt 后必跑 `tools/persona_probe.py`。
+9. **功能架构一等页（用户拍板两次）**：生活/角色体验类功能（追番、修仙世界…）必须是 Dashboard 一等页 + 主程序 core + 主程序守护；插件系统只放小游戏/工具。见 §0 禁令 4。
+10. **测试数据污染（CONFIGDIR 空串陷阱）**：`settings.CONFIGDIR` 是空串 → `os.path.join('','data','bangumi')` = **相对路径** → 沙箱 cwd 在项目根，测试数据会写进真实 `data/`。凡走默认路径的测试必须 patch `daemon_mod._DATA_DIR`（及各 save_path 注入）落到 tmp；跑完 `git status`/ls 检查 `data/` 有无新文件。
+11. **网络环境**：沙箱与用户网络均**连不上 api.bgm.tv**（被屏蔽），**可直连 api.bilibili.com**——追番走 B站主源（`bili_client.py`，wbi 签名 + buvid3）+ Bangumi 备用双源。B站端点实跑结论：`pgc/web/timeline`（15 天放送）与 `pgc/view/web/season` 免登录可用（timeline 必须 wbi 签名否则 404）；搜索 `x/web-interface/search/type` 需 wbi+buvid3；旧 `pgc/timeline*` 已下线。签名端点报 -400 先查 wts 是否重复。
 
 ---
 
 ## 8. 当前状态与已知待办
 
-- **可用状态**：EXE 构建链路稳定（BUILD_EXIT=0 可复现），五个插件全部可用，用户存档在 `dist/DyberPet/data/`（元婴·初期，进度由用户持续挂机增长）。
+- **可用状态**：EXE 构建链路稳定（BUILD_EXIT=0 可复现），五个插件全部可用 + 追番导航/修仙世界两个一等页上线，v0.6.9 召回 + AI 抉择已构建交付，用户存档在 `dist/DyberPet/data/`（元婴·初期 + 追番订阅 `data/bangumi/`，进度由用户持续挂机增长）。
 - **默认角色**：韩立（settings.py 三处回退逻辑 + settings.json 已固化；用户指定）。
-- **待用户实测**：附属宠物元婴的召唤链路（道具 → SubPet 跟随）逻辑上兼容、未实测。
-- **调参点**：修为节奏（`cultivation_service.py` 顶部 RATES/NEEDS）、灵石产出率、丹药效果表 `PILL_EFFECTS`、炼丹配方 `ALCHEMY_RECIPES`、秘境表 `plugins/adventure/realms.py`——改完跑对应 tools 测试回归。
+- **待用户实测**：历练「中途召回」（折算收益/再派链路）；奇遇 AI 自主抉择（决策回禀/抉择志回放/「抉择归它」开关往返）；附属宠物元婴召唤链路（逻辑上兼容、未实测）；追番导视封面加载/三 tab 交互。
+- **追番已知事实**：9 月初日番换季空窗（导视以国创为主），10 月新番季自然丰满，非 bug。
+- **调参点**：修为节奏（`cultivation_service.py` 顶部 RATES/NEEDS）、灵石产出率、丹药效果表 `PILL_EFFECTS`、炼丹配方 `ALCHEMY_RECIPES`、秘境表 `plugins/adventure/realms.py`、追番提醒时刻（`bangumi_notify`/`remind_hour` 设置）——改完跑对应 tools 测试回归。
 - **未做**（用户明确砍掉）：官方多 LLM 渠道、software_monitor 考古、action.dyberpet 导出兼容。
-- **git**：按用户习惯，改动后**不自动 commit/push**，等用户验证后指示。
+- **git**：已建 GitHub 备份仓 `lkj314/DyberPet`（origin 走 SSH 别名 `github-dyberpet` + `~/.ssh/dyberpet_deploy` deploy key，HTTPS 443 被屏蔽只能 SSH 22；upstream 指官方 ChaozhongLiu/DyberPet）。2026-09-06 已推 `3ebe57c`。改动后默认不自动 commit/push，等用户指示（用户要求备份时再推，通道实测顺畅）。
 
 ---
 

@@ -76,6 +76,7 @@ class AdventureService:
         self.state: Optional[dict] = None   # away 状态数据；None=在家
         self.buffs: Dict[str, list] = {}    # key → [截止时间戳, 加成]
         self.records: List[dict] = []       # 历练志（最近 N 条）
+        self.pending_events: List[dict] = []  # 召回等主动结算事件（tick 吐出，插件统一演出）
         self.last_tick: float = time.time()
         self.dirty: bool = False
 
@@ -163,11 +164,61 @@ class AdventureService:
             return {'ok': True, 'msg': f"已赴「{spec['name']}」历练，"
                                        f"预计 {eta} 后归来", 'success': p}
 
+    def recall(self, now: Optional[float] = None) -> dict:
+        """中途召回：按已历练时长线性折算收益，立即结束本次历练。
+
+        折算规则（对玩家友好，与"失败只减速不倒扣"同一哲学）：
+        - 修为/灵石 = 派出时掷定的收益 × (elapsed / duration)，向下取整；
+        - 丹药不寻获、受伤不落身（中途撤离，伤还没落下来）——召回是避险手段；
+        - 结果档记「召回」，历练志照写；
+        - 实际入账/演出由 adventure 插件从 tick() 的 return 事件统一处理
+          （单一驱动者原则，UI 只负责调本方法）。
+        """
+        now = time.time() if now is None else now
+        with self.lock:
+            if self.state is None:
+                return {'ok': False, 'msg': '道友并未在外历练，何来召回'}
+            st = self.state
+            frac = min(1.0, max(0.0, st['elapsed'] / max(1.0, st['duration'])))
+            exp = int(float(st['exp']) * frac)
+            stones = int(float(st['stones']) * frac)
+            result = {
+                'name': st['spec']['name'],
+                'outcome': '召回',
+                'exp': exp, 'stones': stones,
+                'pill': None, 'injury': None,
+                'success': st['p'],
+                'skeleton': st['skeleton'],
+                'duration': st['duration'],
+                'elapsed': st['elapsed'],
+                'recalled': True,
+            }
+            record = {'t': now, 'name': st['spec']['name'],
+                      'outcome': '召回', 'exp': exp, 'stones': stones,
+                      'pill': None, 'offline': False, 'story': ''}
+            self.records.append(record)
+            if len(self.records) > RECORDS_MAX:
+                del self.records[:-RECORDS_MAX]
+            self.state = None
+            self.last_tick = now   # 归位对齐（防止残留差值下轮误结算留守事件）
+            self.pending_events.append(
+                {'type': 'return', 'result': result, 'offline': False})
+            self.dirty = True
+            mins = int(st['elapsed'] // 60)
+            gone = f'{mins // 60}小时{mins % 60}分' if mins >= 60 \
+                else f'{max(1, mins)}分钟'
+            return {'ok': True,
+                    'msg': f"已传讯召回，从「{st['spec']['name']}」提前归来"
+                           f"（在外 {gone}，收益按 {frac:.0%} 折算）",
+                    'result': result}
+
     def tick(self, now: Optional[float] = None) -> List[dict]:
         """时间戳差值结算：传讯符到点推送、留守事件、归来判定。"""
         now = time.time() if now is None else now
         events: List[dict] = []
         with self.lock:
+            events.extend(self.pending_events)   # 召回等主动结算事件优先吐出
+            self.pending_events = []
             delta = now - self.last_tick
             if delta < 0:
                 return events          # 时间回拨：放弃本次（文档 §6.2）

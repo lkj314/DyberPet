@@ -166,6 +166,12 @@ class worldInterface(ScrollArea):
         self.sw_qiyu.setChecked(bool(settings.world_qiyu_choices))
         self.sw_qiyu.checkedChanged.connect(self._on_qiyu)
         st.addWidget(self.sw_qiyu)
+        self.sw_ai = SwitchButton('抉择归它', self.settingCard)
+        self.sw_ai.setOnText('开')
+        self.sw_ai.setOffText('关')
+        self.sw_ai.setChecked(bool(getattr(settings, 'world_ai_decide', True)))
+        self.sw_ai.checkedChanged.connect(self._on_ai_decide)
+        st.addWidget(self.sw_ai)
 
         # ---- 三线日志 ----
         self.tabs = QTabWidget(self.scrollWidget)
@@ -252,6 +258,10 @@ class worldInterface(ScrollArea):
         settings.world_qiyu_choices = bool(flag)
         settings.save_settings()
 
+    def _on_ai_decide(self, flag: bool):
+        settings.world_ai_decide = bool(flag)
+        settings.save_settings()
+
     def _showInstruction(self):
         from qfluentwidgets import MessageBox
         box = MessageBox(
@@ -260,8 +270,9 @@ class worldInterface(ScrollArea):
             '⏺ 世界日志：道友们各自修行历练、结缘结仇、生老病死，'
             '天下大事低频流转。\n'
             '⏺ 游历直播：桌宠外出历练时的见闻琐事实时入流。\n'
-            '⏺ 奇遇请示：桌宠遇到拿不准的事会来问你，你的选择会写下'
-            '因果——多年之后，当年的因会自己找上门来。\n\n'
+            '⏺ 奇遇抉择：桌宠遇到奇遇会自己拿主意（按它的性格与处境判断），'
+            '事后向你回禀经过与收获；你只需偶尔看一眼抉择志。'
+            '把「抉择归它」关掉，就回到由你拍板的老玩法。\n\n'
             '离开一段时间再回来看，世界真的会变。',
             self)
         box.yesButton.setText('知道了')
@@ -284,12 +295,54 @@ class worldInterface(ScrollArea):
         self._fill_roster()
         self._fill_fallen()
 
-    # ---- 奇遇请示卡 ----
+    # ---- 奇遇抉择卡（三态：AI 斟酌中 / 抉择志回放 / 手动请示）----
     def _fill_choice(self):
         pending = self.world.world.get('pending_choice')
+        ai_mode = bool(getattr(settings, 'world_ai_decide', True))
+        while self.choice_btns.count():         # 三态统一先清按钮
+            item = self.choice_btns.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
         if not pending:
-            self.choice_frame.hide()
+            last = self.world.world.get('last_decision') if ai_mode else None
+            if not last:
+                self.choice_frame.hide()
+                return
+            # 抉择志：回放桌宠最近一次自主抉择（想看时看到，绝不催）
+            self._shown_choice_id = None
+            self.choice_title.setText(
+                f"抉择志 · {last.get('title', '奇遇')}（世界日 {last.get('day', 0)}）")
+            why = f"（{last['reason']}）" if last.get('reason') else ''
+            self.choice_text.setText(
+                f"我{last.get('choice_text', '')}{why}\n"
+                f"{last.get('result_text', '')}")
+            grants = last.get('grants') or {}
+            harvest = []
+            if int(grants.get('exp', 0) or 0) > 0:
+                harvest.append(f"修为 +{int(grants['exp'])}")
+            if int(grants.get('stones', 0) or 0) > 0:
+                harvest.append(f"灵石 +{int(grants['stones'])}")
+            if grants.get('item'):
+                harvest.append(f"「{grants['item']}」入背包")
+            if grants.get('injury'):
+                harvest.append('受了些伤')
+            txt = f"收获：{'，'.join(harvest)}" if harvest else '并无实质收获'
+            if last.get('echoes'):
+                txt += '｜因果已种下，回响不知何日归来'
+            self.choice_result.setText(txt)
+            self.choice_result.show()
+            self.choice_frame.show()
             return
+        if ai_mode:
+            # 斟酌中：决策由世界守护后台完成，不给按钮不逼选择
+            self._shown_choice_id = pending.get('id')
+            self.choice_title.setText(f"抉择 · {pending.get('title', '奇遇')}")
+            self.choice_text.setText(pending.get('narrative', ''))
+            self.choice_result.setText('⏳ 它正在权衡此事……稍后向你回禀。')
+            self.choice_result.show()
+            self.choice_frame.show()
+            return
+        # 手动请示模式（开关「抉择归它」关闭时的原有交互）
         if getattr(self, '_shown_choice_id', None) == pending.get('id') \
                 and self.choice_frame.isVisible() \
                 and not self.choice_result.isHidden():
@@ -298,10 +351,6 @@ class worldInterface(ScrollArea):
         self.choice_title.setText(f"请示 · {pending.get('title', '奇遇')}")
         self.choice_text.setText(pending.get('narrative', ''))
         self.choice_result.hide()
-        while self.choice_btns.count():
-            item = self.choice_btns.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
         for c in pending.get('choices', []):
             b = QPushButton(c.get('text', ''), self.choice_frame)
             b.setCursor(Qt.PointingHandCursor)

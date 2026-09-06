@@ -46,3 +46,4 @@ models/
 
 # WorkBuddy 内部工作记忆（AI 助手本地数据，绝不入库）
 .workbuddy/
+build_log.txt

@@ -16,13 +16,30 @@ class LoLCompanionPlugin(Plugin):
         self.worker = LoLCompanionWorker(
             cfg=cfg, ollama_base=DEFAULT_OLLAMA_BASE,
             model=cfg.get('model'), interval=2.0)
-        self.worker.caster_line.connect(lambda line: self.api.pet.say(line))
+        self.worker.caster_line.connect(self._on_caster_line)
         self.worker.companion_react.connect(lambda emo: self.api.pet.react(emo))
         self.worker.start()
         # ② LCU 客户端线程（自动接受/点赞/回房 + 对局战报）
         self.lcu_worker = LcuWorker(cfg)
         self.lcu_worker.report_ready.connect(self._on_report)
         self.lcu_worker.start()
+
+    def _on_caster_line(self, line: str):
+        """解说词消费端：气泡与 TTS 语音按设置独立分流。
+
+        语音引擎设置：自动=edge-tts 优先+本地兜底；仅本地=直接 Windows SAPI
+        （零联网零延迟，Huihui/Kangkang 老引擎机械腔）。
+        """
+        try:
+            if self.api.settings.get('bubble', True):
+                self.api.pet.say(line)
+            if self.api.settings.get('tts', True):
+                self.api.pet.speak(
+                    line,
+                    local_only=(self.api.settings.get('voice_engine', '自动')
+                                == '仅本地'))
+        except Exception as e:  # noqa: BLE001
+            print(f'[lol_companion] caster line failed: {e!r}')
 
     # ---- 对局战报：气泡判词 + 通知栏战报卡 + 修为联动 ----
     def _on_report(self, report: dict):

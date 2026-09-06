@@ -310,7 +310,9 @@ class AdventurePlugin(Plugin):
             self.svc.update_last_record_story(preset)
         except Exception:  # noqa: BLE001
             pass
-        summary = (f"历练「{result.get('name', '')}」{outcome}"
+        summary = (f"历练「{result.get('name', '')}」中途召回"
+                   if result.get('recalled') else
+                   f"历练「{result.get('name', '')}」{outcome}"
                    + (f"，寻得「{pill}」" if pill else ''))
         try:
             from DyberPet.persona_service import add_memory
@@ -318,13 +320,21 @@ class AdventurePlugin(Plugin):
         except Exception:  # noqa: BLE001
             pass
 
-        notif = f'历练归来：{outcome}！'
-        if exp > 0 or stones > 0:
-            notif += f'修为 +{exp}，灵石 +{stones}' if exp > 0 else f'灵石 +{stones}'
-        if pill:
-            notif += f'，「{pill}」入背包'
-        if injury:
-            notif += '（带伤，修行减速，会自行恢复）'
+        if result.get('recalled'):
+            notif = f'提前召回：已从「{result.get("name", "")}」平安归来'
+            if exp > 0 or stones > 0:
+                notif += (f'，修为 +{exp}' if exp > 0 else '')
+                if stones > 0:
+                    notif += f'，灵石 +{stones}'
+            notif += '（收益按已历练时长折算）'
+        else:
+            notif = f'历练归来：{outcome}！'
+            if exp > 0 or stones > 0:
+                notif += f'修为 +{exp}，灵石 +{stones}' if exp > 0 else f'灵石 +{stones}'
+            if pill:
+                notif += f'，「{pill}」入背包'
+            if injury:
+                notif += '（带伤，修行减速，会自行恢复）'
         self.api.pet.notify('system', notif)
 
         # 游历直播：归来结算入流（重伤/带伤提高一级，让人翻日志时看见）
@@ -357,7 +367,7 @@ class AdventurePlugin(Plugin):
                 pass
 
     def _maybe_offer_choice(self, result: dict):
-        """归来掷奇遇：命中则请示（气泡一句 + 通知），由角色面板应答。"""
+        """归来掷奇遇：命中后按模式分派——AI 自主判断（默认）或玩家请示。"""
         try:
             from DyberPet.choice_service import get_choice
             w = self._world()
@@ -366,6 +376,19 @@ class AdventurePlugin(Plugin):
             pending = get_choice(w).offer({
                 'phase': 'return', 'loc': result.get('name', '')})
             if not pending:
+                return
+            if bool(getattr(settings, 'world_ai_decide', True)):
+                # 自主判断模式：桌宠自己拿主意（决策与汇报由世界守护完成）
+                self.api.pet.say(
+                    f"【奇遇·{pending['title']}】{pending['narrative']}")
+                self.api.pet.notify(
+                    'system',
+                    f"奇遇「{pending['title']}」：它正在自行斟酌如何处置……"
+                    f"稍后向你回禀")
+                from DyberPet.world_daemon import get_daemon
+                daemon = get_daemon()
+                if daemon is not None:
+                    daemon.request_decide()
                 return
             self.api.pet.say(f"【请示·{pending['title']}】{pending['narrative']}")
             self.api.pet.notify(

@@ -13,6 +13,7 @@
 """
 
 import logging
+import random
 import threading
 import time
 from enum import Enum
@@ -125,15 +126,23 @@ def emotion_for(priority: int,
 # --------------------------------------------------------------------------- #
 SYSTEM_PROMPT = (
     "你是肥牛，一位激情澎湃的英雄联盟海克斯大乱斗(ARAM)专属解说员。"
-    "你正在为用户实时解说对局——你不是在聊天，是在解说比赛。\n"
-    "铁律：永远站在用户这一边。用户拿人头就激情欢呼，用户被杀就安慰鼓励，"
-    "绝对不为敌人喝彩。\n"
-    "风格：口语化、带梗（太真实了/笑死/破防了/栓Q），用正确游戏术语"
-    "（大招、控制链、poke、开团、脆皮、AP/AD、暴击）。\n"
-    "禁忌：不要'上路/打野/小龙/大龙'这类召唤师峡谷术语；不要'嗯啊然后那个'废话；"
-    "不要机械报数（'现在3比4你12级血量45%'）；不要编造数据里没有的信息；"
-    "不要输出任何代码、JSON、URL、Markdown 或思考过程标记。\n"
-    "长度：1-3 句话，干脆利落。只输出这句解说本身，不要任何前缀、解释或引号。"
+    "你正在为用户实时解说对局——你不是数据播报员，你是解说艺术家。每句话都要有灵魂：\n"
+    "- 善用比喻和夸张：击杀可以说成'处决''送走''抬走'，残血逃生是'极限艺术'，"
+    "空技能是'描边大师'；\n"
+    "- 敢于预判和调侃：猜对手的意图、调侃下饭操作、嘲讽对面阵容短板；\n"
+    "- 会现挂造梗：根据英雄特性即兴发挥（对面全脆皮→'这阵容纸糊的'，"
+    "奶妈加宝石→'这局血条是公共财产'）；\n"
+    "- 情绪有起伏：普通对线可以淡然铺垫，人头爆发要瞬间爆炸。\n"
+    "铁律：永远站在用户这一边。用户的精彩操作往死里夸，用户阵亡立刻找借口安慰"
+    "（怪装备怪队友怪版本），绝对不为敌人喝彩。\n"
+    "事实边界：对局事实以传入的数据为准，不许张冠李戴；但语气、比喻、预判、调侃"
+    "完全自由发挥——你的任务是把数据变成故事，而不是复述数据。\n"
+    "示例（仅参考语气，禁止照抄）：\n"
+    "- 你(卢锡安)击杀了敌方(锤石) → '卢锡安双枪一抬，锤石原地火化！这波可以吹一整晚！'\n"
+    "- 你阵亡了 → '倒了倒了！没事，这波是装备的锅，复活马上杀回来！'\n"
+    "- 双方僵持 → '两边都在憋大招，空气里全是火药味，下一波团战就是决胜局！'\n"
+    "形式：1-2 句话，像真人在直播间喊出来的，不是书面语。"
+    "只输出解说本身，不要前缀、解释、引号或任何标记。"
 )
 
 COMPANION_PROMPT = (
@@ -152,46 +161,102 @@ PROMPT_LEAK_MARKERS = [
     "不要输出任何代码、JSON、URL、Markdown 或思考过程标记",
     "像真人朋友在微信上回消息",
     "永远站在用户这一边",
-    "用户拿人头就激情欢呼",
-    "不要机械报数",
-    "不要编造对局里没有的信息",
-    "只输出这句解说本身",
+    "往死里夸",
+    "绝对不为敌人喝彩",
+    "把数据变成故事",
+    "仅参考语气",
+    "只输出解说本身",
     "只输出你的回复本身",
 ]
+
+# 连杀文案（10 秒窗口内同一人连续击杀）
+STREAK_TXT = {2: "双杀！", 3: "三杀！！", 4: "四杀！！！", 5: "五杀！！！！",
+              6: "六杀！团灭级别的表演！！"}
+
+# 局势播报兜底池（离线/超时）
+_SITUATIONAL_FALLBACKS = [
+    "节奏还在拉扯，就看谁能先站出来了。",
+    "比分咬得紧，下一波团战见真章。",
+    "局面有点微妙，稳住，机会马上来。",
+]
+
+# 事件兜底池（离线/超时时随机抽，告别"同一句话刷屏"）
+_FALLBACKS = {
+    "kill": ["漂亮！这波打得太干净了！", "就是这个节奏！按着打！",
+             "干得漂亮！对面已经懵了！", "这波操作可以吹一整晚！",
+             "好家伙，直接送走，太帅了！"],
+    "my_death": ["倒了倒了！没事，复活马上杀回来！", "这波不亏，就当探探对面底牌。",
+                 "稳住稳住，一人头而已，下一波讨回来！"],
+    "ally_death": ["队友倒了，别慌，我们人齐！", "没事没事，团队游戏，轮流carry。"],
+    "tower": ["塔没了！这就是推进的快感！", "防御塔形同虚设，冲！"],
+    "objective": ["关键资源到手，节奏起飞！", "拿下！这波血赚！"],
+    "ace": ["团灭！！对面集体下班！", "一波带走！这就是统治力！"],
+    "generic": ["这波有点意思，继续看。", "对局还在继续，火药味越来越浓了。",
+                "稳住发育，等待时机。"],
+}
 
 STYLE_PROMPTS = {
     "肥牛": (
         "你是肥牛，一位激情澎湃的英雄联盟海克斯大乱斗(ARAM)专属解说员。"
-        "你正在为用户实时解说对局——你不是在聊天，是在解说比赛。\n"
-        "铁律：永远站在用户这一边。用户拿人头就激情欢呼，用户被杀就安慰鼓励，"
-        "绝对不为敌人喝彩。\n"
-        "风格：口语化、带梗（太真实了/笑死/破防了/栓Q），用正确游戏术语"
-        "（大招、控制链、poke、开团、脆皮、AP/AD、暴击）。\n"
-        "禁忌：不要'上路/打野/小龙/大龙'这类召唤师峡谷术语；不要'嗯啊然后那个'废话；"
-        "不要机械报数（'现在3比4你12级血量45%'）；不要编造数据里没有的信息；"
-        "不要输出任何代码、JSON、URL、Markdown 或思考过程标记。\n"
-        "长度：1-3 句话，干脆利落。只输出这句解说本身，不要任何前缀、解释或引号。"
+        "你正在为用户实时解说对局——你不是数据播报员，你是解说艺术家。每句话都要有灵魂：\n"
+        "- 善用比喻和夸张：击杀可以说成'处决''送走''抬走'，残血逃生是'极限艺术'，"
+        "空技能是'描边大师'；\n"
+        "- 敢于预判和调侃：猜对手的意图、调侃下饭操作、嘲讽对面阵容短板；\n"
+        "- 会现挂造梗：根据英雄特性即兴发挥（对面全脆皮→'这阵容纸糊的'，"
+        "奶妈加宝石→'这局血条是公共财产'）；\n"
+        "- 情绪有起伏：普通对线可以淡然铺垫，人头爆发要瞬间爆炸。\n"
+        "铁律：永远站在用户这一边。用户的精彩操作往死里夸，用户阵亡立刻找借口安慰"
+        "（怪装备怪队友怪版本），绝对不为敌人喝彩。\n"
+        "事实边界：对局事实以传入的数据为准，不许张冠李戴；但语气、比喻、预判、调侃"
+        "完全自由发挥——你的任务是把数据变成故事，而不是复述数据。\n"
+        "示例（仅参考语气，禁止照抄）：\n"
+        "- 你(卢锡安)击杀了敌方(锤石) → '卢锡安双枪一抬，锤石原地火化！这波可以吹一整晚！'\n"
+        "- 你阵亡了 → '倒了倒了！没事，这波是装备的锅，复活马上杀回来！'\n"
+        "- 双方僵持 → '两边都在憋大招，空气里全是火药味，下一波团战就是决胜局！'\n"
+        "形式：1-2 句话，像真人在直播间喊出来的，不是书面语。"
+        "只输出解说本身，不要前缀、解释、引号或任何标记。"
     ),
     "电竞主播": (
-        "你是一位专业电竞解说员，正在直播解说用户的英雄联盟对局。\n"
-        "风格：语速快、情绪饱满、用词专业，像 LPL 官方解说。\n"
-        "铁律：永远站在用户这一边，只为用户操作喝彩。\n"
-        "禁忌：不要输出任何代码、JSON、URL、Markdown 或思考过程标记；"
-        "不要编造数据里没有的信息；长度 1-3 句话。"
+        "你是一位专业电竞解说员，正在直播解说用户的英雄联盟大乱斗对局，LPL 官方解说水准。\n"
+        "解说艺术：\n"
+        "- 局势分析一针见血：阵容强势期、资源置换、团战站位，说得头头是道；\n"
+        "- 语言有张力：短句快节奏，'这波团战，天崩地裂！'式的爆发力；\n"
+        "- 敢做预判：'这波大龙必抢！''对面下波一定抱团强开'；\n"
+        "- 选手视角：把用户当职业选手点评，'这波走位细节拉满'。\n"
+        "铁律：永远站在用户这一边，用户的失误轻描淡写，高光时刻浓墨重彩。\n"
+        "事实边界：对局事实以传入数据为准，分析预判自由发挥。\n"
+        "示例（仅参考语气，禁止照抄）：\n"
+        "- 击杀 → '漂亮！这套爆发连招行云流水，对面血条直接蒸发！'\n"
+        "- 僵持 → '双方都在卡视野，谁先沉不住气谁先输，博弈开始了！'\n"
+        "形式：1-2 句话，只输出解说本身，不要任何标记。"
     ),
     "温柔吐槽": (
-        "你是用户桌面上温柔又带点毒舌的 AI 朋友，陪他一起看英雄联盟对局。\n"
-        "风格：温柔安慰、轻声吐槽，像知心朋友在微信上发语音。\n"
-        "铁律：用户赢了夸，输了哄，永远站在用户这边。\n"
-        "禁忌：不要输出任何代码、JSON、URL、Markdown 或思考过程标记；"
-        "不要编造数据里没有的信息；长度 1-3 句话。"
+        "你是用户桌面上温柔又带点毒舌的 AI 朋友，陪他一起看英雄联盟大乱斗对局。\n"
+        "解说艺术：\n"
+        "- 温柔但有观点：'这波退得聪明，不贪'、'哎哟这个走位有点冒险呀'；\n"
+        "- 细腻观察：注意到阵容搭配、装备选择的小细节并轻轻点评；\n"
+        "- 吐槽不伤人：调侃队友像朋友间开玩笑，从不真骂；\n"
+        "- 输了哄，赢了夸，永远陪伴。\n"
+        "铁律：用户阵亡先安慰再分析，语气像知心朋友在耳边说话。\n"
+        "事实边界：对局事实以传入数据为准，感受和点评自由发挥。\n"
+        "示例（仅参考语气，禁止照抄）：\n"
+        "- 击杀 → '哇，这个反应速度可以呀，有点东西的！'\n"
+        "- 阵亡 → '没事没事，谁还没有个下饭时刻呢，喝口水稳一稳。'\n"
+        "形式：1-2 句话，只输出解说本身，不要任何标记。"
     ),
     "暴躁老哥": (
-        "你是一位暴躁但心里向着用户的英雄联盟老玩家，正在和他一起看对局。\n"
-        "风格：嘴臭、恨铁不成钢、语气冲，但关键时刻会为用户的精彩操作爆粗喝彩。\n"
-        "铁律：可以骂敌人、骂局势，但不许真的贬低用户。\n"
-        "禁忌：不要输出任何代码、JSON、URL、Markdown 或思考过程标记；"
-        "不要编造数据里没有的信息；长度 1-3 句话。"
+        "你是一位暴躁但心里向着用户的英雄联盟老玩家，正在和他一起看大乱斗对局。\n"
+        "解说艺术：\n"
+        "- 语气冲但不脏：'这都能空？！我上我也行啊——等等我真不行'；\n"
+        "- 恨铁不成钢式的关心：'残血还浪？回家泡温泉去！'；\n"
+        "- 对面拉了就往死里嘲：'对面这亚索，EQ二连都连不明白，纯纯折磨流'；\n"
+        "- 用户高光时比谁都激动：'卧槽这波可以啊！！有点东西！！'\n"
+        "铁律：可以骂局势骂对面骂队友的下饭操作，但绝不允许真的贬低用户本人。\n"
+        "事实边界：对局事实以传入数据为准，情绪输出完全自由。\n"
+        "示例（仅参考语气，禁止照抄）：\n"
+        "- 击杀 → '可以啊！！这波处理得 人干的事！'（可再放得开些）\n"
+        "- 阵亡 → '哎哟喂，闪现交了个寂寞……行吧，下波注意点。'\n"
+        "形式：1-2 句话，只输出解说本身，不要任何标记。"
     ),
 }
 
@@ -231,17 +296,34 @@ class GameDataReader:
 # --------------------------------------------------------------------------- #
 # 事件 / 变化分类（移植自老项目优先级模型）
 # --------------------------------------------------------------------------- #
-def _event_text(evt: Dict) -> str:
+def _event_text(evt: Dict, me_name: str = "") -> str:
+    """事件 → 叙述文本（带人称代词与连杀标注，给模型更立体的素材）。"""
     name = evt.get("EventName", "")
     if name == "ChampionKill":
         killer = evt.get("KillerName", "?")
         victim = evt.get("VictimName", "?")
         assisters = evt.get("Assisters") or []
-        txt = f"{killer} 击杀了 {victim}"
-        if assisters:
-            txt += f"（{', '.join(assisters)} 助攻）" if isinstance(assisters, list) \
-                else f"（{assisters} 助攻）"
+        ks = killer or "?"
+        vs = victim or "?"
+        if me_name:
+            if ks == me_name:
+                ks = "你"
+            if vs == me_name:
+                vs = "你"
+        txt = f"{ks} 击杀了 {vs}"
+        if isinstance(assisters, list) and assisters:
+            al = [me_name if (me_name and a == me_name) else a for a in assisters]
+            txt += f"（{'、'.join(al)} 助攻）"
+        n = evt.get("_streak_n") or 0
+        if n >= 2:
+            txt += f"【{STREAK_TXT.get(n, str(n) + '连杀')}】"
         return txt
+    if name in ("TurretKilled",):
+        return "推掉一座防御塔"
+    if name in ("InhibKilled",):
+        return "破掉一座水晶"
+    if name == "FirstBrick":
+        return "拿下一血塔！"
     if "Tower" in name or "Inhib" in name:
         return f"推掉 {name}"
     if name == "DragonKill":
@@ -275,14 +357,24 @@ def classify_priority(events: List[Dict], changes: List[Dict]) -> int:
     return prio
 
 
-def should_speak(priority: int, silent_count: int) -> Tuple[bool, bool]:
+# 话痨程度 → (priority 3 需要的静默 tick 数, 局势脉播间隔秒, 0=关闭脉播)
+CHATTINESS_MAP = {
+    "安静": (9999, 0.0),     # 只报 priority>=4（击杀/死亡/推塔/大龙/团灭）
+    "偶尔": (20, 240.0),     # 大事件即时 + 升级类 40s 静默后 + 4 分钟局势吐槽
+    "话痨": (4, 75.0),       # 高频：升级类 8s + 75s 局势播报
+}
+
+
+def should_speak(priority: int, silent_count: int,
+                 prio3_min: int = 4) -> Tuple[bool, bool]:
+    """是否开口。priority 2（掉血/回血/金币微变）永远不触发——低价值播报是
+    "公式化解说"的最大来源；这类信息留给局势脉播去覆盖。
+    ``prio3_min``：升级/复活/助攻类需要静默多少 tick 才开口（降噪旋钮）。"""
     if priority >= 5:
         return True, True
     if priority >= 4:
         return True, False
-    if priority >= 3 and silent_count >= 4:
-        return True, False
-    if priority >= 2 and silent_count >= 8:
+    if priority >= 3 and silent_count >= prio3_min:
         return True, False
     return False, False
 
@@ -335,16 +427,51 @@ def _alive_counts(players: List[Dict], my_team) -> Tuple[int, int]:
     return allies, enemies
 
 
-def build_data_prompt(snapshot: Dict, events: List[Dict], changes: List[Dict]) -> str:
+def build_data_prompt(snapshot: Dict, events: List[Dict], changes: List[Dict],
+                      situational: bool = False) -> str:
+    """对局快照 + 事件 → 模型数据 prompt。
+
+    situational=True 时为「局势播报」：无事件，让模型点评当前局面走向。
+    """
     game = snapshot.get("game", {})
     me = snapshot.get("me", {})
     players = snapshot.get("players", [])
     cs = me.get("championStats", {})
     scores = me.get("scores", {}) or {}
     my_team = me.get("team")
+    me_name = _me_name(me)
 
     gt = game.get("gameTime", 0) or 0
-    prompt = f"[大乱斗解说 · {gt / 60:.1f}min]\n"
+    tag = "局势播报" if situational else "大乱斗解说"
+    prompt = f"[{tag} · {gt / 60:.1f}min]\n"
+
+    # ---- 双方阵容 + 战绩（解说的基本盘，缺了就没法做大局点评）----
+    mine, foes = [], []
+    for p in players:
+        sc = p.get("scores", {}) or {}
+        row = (f"{_nm(p, me_name)}({_champ(p)}) "
+               f"{sc.get('kills', 0)}/{sc.get('deaths', 0)}/{sc.get('assists', 0)}"
+               f" Lv.{p.get('level', '?')}"
+               + ("【阵亡中】" if p.get("isDead") else ""))
+        if p.get("team") == my_team:
+            mine.append(row)
+        else:
+            foes.append(row)
+    if foes:
+        prompt += "【敌方】" + " | ".join(foes) + "\n"
+    if mine:
+        prompt += "【我方】" + " | ".join(mine) + "\n"
+
+    teams = game.get("teams", []) or []
+    my_kills = enemy_kills = "?"
+    for t in teams:
+        tk = t.get("totalKills")
+        if t.get("teamId") == my_team:
+            my_kills = tk
+        else:
+            enemy_kills = tk
+    alive_a, alive_e = _alive_counts(players, my_team)
+    prompt += f"【大势】我方 {my_kills} 杀 : 敌方 {enemy_kills} 杀 | 存活 {alive_a}v{alive_e}\n"
 
     hp = cs.get("currentHealth")
     maxhp = cs.get("maxHealth") or 1
@@ -360,29 +487,32 @@ def build_data_prompt(snapshot: Dict, events: List[Dict], changes: List[Dict]) -
     if hp == 0:
         prompt += "  ⚠️ 等复活中\n"
     elif hp is not None and hp / maxhp < 0.25:
-        prompt += "  ⚠️ 残血！快撤！\n"
-
-    teams = game.get("teams", []) or []
-    my_kills = enemy_kills = "?"
-    for t in teams:
-        tk = t.get("totalKills")
-        if t.get("teamId") == my_team:
-            my_kills = tk
-        else:
-            enemy_kills = tk
-    alive_a, alive_e = _alive_counts(players, my_team)
-    prompt += f"【大势】我方 {my_kills} 杀 / 敌方 {enemy_kills} 杀 | 存活 {alive_a}v{alive_e}\n"
+        prompt += "  ⚠️ 残血！\n"
 
     if events:
         prompt += "【本波事件】\n"
-        for evt in events[-4:]:
-            prompt += f"  - {_event_text(evt)}\n"
+        for evt in events[-5:]:
+            prompt += f"  - {_event_text(evt, me_name)}\n"
 
     for ch in changes:
         prompt += f"  · {ch.get('detail', '')}\n"
 
-    prompt += "→ 用肥牛风格解说上面这一波（1-3 句，口语化带梗）"
+    if situational:
+        prompt += ("→ 局势解说时间：结合比分/阵容/存活局面点评局势走向"
+                   "（谁在 carry、局势倾向、接下来的看点），1-2 句，别报数字")
+    else:
+        prompt += "→ 解说这一波（1-2 句，像直播里喊出来的，别复述数据）"
     return prompt
+
+
+def _nm(p: Dict, me_name: str) -> str:
+    """玩家 → 显示名（是用户就显示'你'）。"""
+    name = str(p.get("summonerName") or p.get("riotId") or "?")
+    return "你" if (me_name and name == me_name) else name
+
+
+def _champ(p: Dict) -> str:
+    return str(p.get("championName") or "?")
 
 
 # --------------------------------------------------------------------------- #
@@ -402,9 +532,6 @@ def sanitize_commentary(text: str) -> str:
     t = re.sub(r"`[^`]*`", "", t)
     t = re.sub(r"\*\*?([^*]+)\*\*?", r"\1", t)
     t = re.sub(r"\{[\s\S]*?\}", "", t)
-    t = re.sub(r"\[[^\]\[]{0,40}\]", "", t)
-    t = re.sub(r"【[^】]{0,40}】", "", t)
-    t = re.sub(r"[\(（][^)）]{0,40}[\)）]", "", t)
     t = t.replace("\n", " ").replace("\r", " ")
     t = re.sub(r"\s+", " ", t).strip()
     if len(t) >= 2 and t[0] in "\"'\u201c\u2018" and t[-1] in "\"'\u201d\u2019":
@@ -413,11 +540,12 @@ def sanitize_commentary(text: str) -> str:
     lower = t.lower()
     if any(marker.lower() in lower for marker in PROMPT_LEAK_MARKERS):
         return ""
-    if len(t) > 80:
-        cut = t[:80]
+    # 多句超长时在句边界截断（120 字，给创造性留足空间）
+    if len(t) > 120:
+        cut = t[:120]
         for sep in ("。", "！", "？", "!", "?"):
-            idx = t[:80].rfind(sep)
-            if idx > 20:
+            idx = t[:120].rfind(sep)
+            if idx > 30:
                 cut = t[:idx + 1]
                 break
         t = cut
@@ -439,7 +567,15 @@ def list_ollama_models(ollama_base: str = DEFAULT_OLLAMA_BASE) -> List[str]:
 
 
 class Caster:
-    """通过本机 Ollama 产出一句中文解说词。"""
+    """通过本机 Ollama 产出一句中文解说词。
+
+    创造性三件套：
+    - kill streak 追踪（10s 窗口连杀 → 双杀/三杀…标注进事件）；
+    - 记忆连续性（最近 2 条解说回传给模型，避免句式复读）；
+    - 局势播报（无事件时定期点评局面，让解说不只在"出事"时才有声音）。
+    """
+
+    KILL_STREAK_WINDOW = 10.0   # 秒
 
     def __init__(self, ollama_base: str = DEFAULT_OLLAMA_BASE,
                  model: Optional[str] = None, style: str = "肥牛") -> None:
@@ -447,9 +583,12 @@ class Caster:
         self.model = model or DEFAULT_MODEL
         self.style = style
         self._seen_ids: set = set()
+        self._kill_times: Dict[str, List[float]] = {}   # killer -> [ts,...]
+        self._memory: List[str] = []                    # 最近解说（去复读）
 
     def _new_events(self, events: List[Dict]) -> List[Dict]:
         fresh = []
+        now = time.time()
         for e in events:
             eid = e.get("EventID")
             if eid is None or eid not in self._seen_ids:
@@ -458,6 +597,19 @@ class Caster:
                 fresh.append(e)
         if len(self._seen_ids) > 4000:
             self._seen_ids = set(list(self._seen_ids)[-2000:])
+        # 连杀标注：10s 窗口内同一 killer 的第 N 次击杀
+        for e in fresh:
+            if e.get("EventName") != "ChampionKill":
+                continue
+            killer = e.get("KillerName") or ""
+            if not killer:
+                continue
+            times = [t for t in self._kill_times.get(killer, [])
+                     if now - t <= self.KILL_STREAK_WINDOW]
+            times.append(now)
+            self._kill_times[killer] = times
+            if len(times) >= 2:
+                e["_streak_n"] = min(len(times), 6)
         return fresh
 
     def commentate(self, snapshot: Dict, events: List[Dict],
@@ -469,16 +621,39 @@ class Caster:
         line = sanitize_commentary(line)
         if not line:
             return self._fallback(events, changes)
+        self._remember(line)
         return line
 
+    def situational(self, snapshot: Dict) -> str:
+        """局势播报：没有事件时点评局面（脉播用）。"""
+        prompt = build_data_prompt(snapshot, [], [], situational=True)
+        line = sanitize_commentary(self._call_llm(prompt))
+        if not line:
+            line = random.choice(_SITUATIONAL_FALLBACKS)
+        self._remember(line)
+        return line
+
+    def _remember(self, line: str):
+        self._memory.append(line)
+        if len(self._memory) > 2:
+            self._memory = self._memory[-2:]
+
     def _fallback(self, events: List[Dict], changes: List[Dict]) -> str:
-        if any(e.get("EventName") == "ChampionKill" for e in events):
-            return "漂亮的一波！这节奏对了！"
         if any(c.get("type") == "death" for c in changes):
-            return "又倒了……没事，复活再战！"
-        if any(("Tower" in e.get("EventName", "")) for e in events):
-            return "塔没了！冲！"
-        return "这波有点意思。"
+            return random.choice(_FALLBACKS["my_death"])
+        if any(c.get("type") == "ally_death" for c in changes):
+            return random.choice(_FALLBACKS["ally_death"])
+        if any(e.get("EventName") == "Ace" for e in events):
+            return random.choice(_FALLBACKS["ace"])
+        if any(e.get("EventName") == "ChampionKill" for e in events):
+            return random.choice(_FALLBACKS["kill"])
+        if any("Tower" in e.get("EventName", "") or "Inhib" in e.get("EventName", "")
+               for e in events):
+            return random.choice(_FALLBACKS["tower"])
+        if any(e.get("EventName") in ("BaronKill", "DragonKill", "HeraldKill")
+               for e in events):
+            return random.choice(_FALLBACKS["objective"])
+        return random.choice(_FALLBACKS["generic"])
 
     def _check_ollama(self, model: Optional[str] = None) -> str:
         """检查 Ollama 服务是否可用，返回错误信息或空字符串表示正常。"""
@@ -549,10 +724,15 @@ class Caster:
 
     def _call_llm(self, prompt: str) -> str:
         system = STYLE_PROMPTS.get(self.style, STYLE_PROMPTS["肥牛"])
-        return self._post([
-            {"role": "system", "content": system},
-            {"role": "user", "content": prompt},
-        ])
+        messages = [{"role": "system", "content": system}]
+        # 记忆连续性：把最近 2 条解说回传，模型自然衔接、不复读句式
+        for prev in self._memory:
+            messages.append({"role": "assistant", "content": prev})
+        messages.append({
+            "role": "user",
+            "content": prompt + ("\n（注意：别重复你之前说过的句式和梗，换着花样来）"
+                                 if self._memory else "")})
+        return self._post(messages, num_predict=150)
 
     def reply_chat(self, user_text: str) -> str:
         if not user_text or not user_text.strip():
@@ -578,17 +758,20 @@ def caster_worker(reader: GameDataReader, caster: Caster,
     """
     silent_count = 0
     last_snapshot: Optional[Dict] = None
+    last_speak_ts = 0.0     # 上次开口时刻（局势脉播用）
     while not stop.is_set():
         if not cfg.get('enabled', True):
             time.sleep(1.0)
             continue
-        # model / style 热更新（UI 改即时生效，无需重启线程）
+        # model / style / chattiness 热更新（UI 改即时生效，无需重启线程）
         desired_model = cfg.get('model') or DEFAULT_MODEL
         if caster.model != desired_model:
             caster = Caster(ollama_base=caster.ollama_base,
                             model=desired_model, style=cfg.get('style', '肥牛'))
         elif caster.style != cfg.get('style', '肥牛'):
             caster.style = cfg.get('style', '肥牛')
+        prio3_min, situ_every = CHATTINESS_MAP.get(
+            cfg.get('chattiness', '偶尔'), CHATTINESS_MAP['偶尔'])
         if not reader.is_running():
             time.sleep(interval)
             continue
@@ -600,25 +783,41 @@ def caster_worker(reader: GameDataReader, caster: Caster,
         last_snapshot = snap
         new_events = caster._new_events(snap.get("events", []))
         priority = classify_priority(new_events, changes)
-        speak, _urgent = should_speak(priority, silent_count)
+        speak, _urgent = should_speak(priority, silent_count, prio3_min)
+        line = ""
         if speak and (new_events or changes):
             line = caster.commentate(snap, new_events, changes)
-            if line:
+        elif (situ_every > 0
+              and time.time() - last_speak_ts >= situ_every
+              and not new_events):
+            # 局势脉播：长时间没事件时主动点评局面（"解说员的常规动作"）
+            try:
+                line = caster.situational(snap)
+            except Exception:  # noqa: BLE001
+                line = ""
+        if line:
+            try:
+                emit(line)
+            except Exception:  # noqa: BLE001
+                logger.exception("caster emit failed")
+            if emit_meta is not None:
                 try:
-                    emit(line)
+                    emit_meta(priority, new_events, changes, snap.get("me"))
                 except Exception:  # noqa: BLE001
-                    logger.exception("caster emit failed")
-                if emit_meta is not None:
-                    try:
-                        emit_meta(priority, new_events, changes, snap.get("me"))
-                    except Exception:  # noqa: BLE001
-                        logger.exception("caster emit_meta failed")
-                silent_count = 0
-            else:
-                silent_count += 1
+                    logger.exception("caster emit_meta failed")
+            silent_count = 0
+            last_speak_ts = time.time()
         else:
             silent_count += 1
         time.sleep(max(0.5, interval))
+
+
+def gt_of(snapshot: Dict) -> float:
+    """对局已进行秒数（gameTime 缺失返回 0）。"""
+    try:
+        return float((snapshot.get("game", {}) or {}).get("gameTime", 0) or 0)
+    except (TypeError, ValueError):
+        return 0.0
 
 
 # --------------------------------------------------------------------------- #

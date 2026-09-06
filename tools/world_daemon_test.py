@@ -134,11 +134,16 @@ settings.world_travel_log = True
 
 # ---- ⑤ 留守奇遇开关（概率常量临时拉满，专测开关与请示链路）----
 import DyberPet.world_daemon as wd  # noqa: E402
+import DyberPet.persona_service as persona_mod  # noqa: E402
+persona_mod.get_persona = lambda: types.SimpleNamespace(  # 隔离：决策线程秒回
+    available=lambda: False, build_prompt=lambda *a, **k: '',
+    _generate=lambda *a, **k: None, _default_model=lambda: 'x')
 adv.is_away = lambda: False          # 留守状态（④步曾 patch 为在外）
 w = daemon.world.world
 w['last_qiyu_ts'] = 0.0
 w['pending_choice'] = None
 settings.world_qiyu_choices = False
+settings.world_ai_decide = False     # ⑤ 专测手动请示链路（AI 链路见 ⑤b）
 wd.IDLE_QIYU_P = 1.0
 offered = None
 for _ in range(5):
@@ -157,6 +162,54 @@ check('开关打开可请示（请示卡数据就绪）',
       offered is not None and offered.get('choices'))
 w['pending_choice'] = None            # 清场
 wd.IDLE_QIYU_P = 0.02                 # 恢复常量
+
+# ---- ⑤b 奇遇 AI 自主决策（解析器 + 端到端收敛链路）----
+from DyberPet.world_daemon import parse_decision  # noqa: E402
+chs = [{'key': 'help', 'text': '出手相助'}, {'key': 'walk', 'text': '转身离去'},
+       {'key': 'rob', 'text': '趁火打劫'}]
+k, why = parse_decision('B|多一事不如少一事', chs)
+check('决策解析·字母→key', k == 'walk' and why == '多一事不如少一事')
+k, why = parse_decision('「A」多一事不如少一事', chs)
+check('决策解析·引号容错', k == 'help')
+k, _ = parse_decision('E|越界选项', chs)
+check('决策解析·越界拒绝', k is None)
+k, why = parse_decision('胡言乱语没有格式', chs)
+check('决策解析·乱码拒绝', k is None and why == '')
+k, _ = parse_decision('', chs)
+check('决策解析·空输出拒绝', k is None)
+
+settings.world_ai_decide = True
+w['last_qiyu_ts'] = 0.0
+w['pending_choice'] = None
+wd.IDLE_QIYU_P = 1.0
+offered = None
+for _ in range(5):
+    daemon.idle_qiyu()               # announce → say+notify+request_decide（线程已隔离）
+    if w.get('pending_choice'):
+        offered = w['pending_choice']
+        break
+check('AI 模式奇遇照常掷出', offered is not None)
+check('AI 模式演出是自主口径',
+      any('自行斟酌' in m for _, m in fake.notes))
+if offered:
+    pid = str(offered.get('id', ''))
+    # LLM 不可用（persona 已 patch）→ 模拟迟到答案 key=None → 规则回退收敛
+    daemon._deciding_id = pid
+    daemon._on_decided({'id': pid, 'ts': offered.get('ts'),
+                        'key': None, 'reason': ''})
+    check('AI 决策收敛（pending 已清）', not w.get('pending_choice'))
+    last = w.get('last_decision')
+    check('抉择志落档（选择+结果+收获齐备）',
+          bool(last) and last.get('choice_text') and 'result_text' in last
+          and 'grants' in last)
+    check('决策回禀通知已发', any('回禀' in m for _, m in fake.notes))
+    # 迟到的重复答案被幂等丢弃（pending 已清）
+    daemon._deciding_id = None
+    daemon._on_decided({'id': pid, 'ts': offered.get('ts'),
+                        'key': 'rob', 'reason': ''})
+    check('迟到答案幂等丢弃', not w.get('pending_choice'))
+settings.world_ai_decide = False
+wd.IDLE_QIYU_P = 0.02
 
 # ---- ⑥ 演出克制：单 tick 最多 2 条 ----
 notable = daemon.world.drain_notable()

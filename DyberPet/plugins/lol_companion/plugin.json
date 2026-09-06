@@ -35,6 +35,32 @@
       "icon": "EMOJI_TAB_SYMBOLS"
     },
     {
+      "key": "chattiness",
+      "type": "combo",
+      "default": "偶尔",
+      "label": "Commentary Frequency",
+      "description": "安静=只报击杀/死亡等大事件；偶尔=大事件+约4分钟一次局势吐槽；话痨=高频全程解说",
+      "options": ["安静", "偶尔", "话痨"],
+      "icon": "VOLUME"
+    },
+    {
+      "key": "tts",
+      "type": "switch",
+      "default": true,
+      "label": "Voice Broadcast (TTS)",
+      "description": "Speak the commentary aloud (edge-tts online, Windows offline voice fallback)",
+      "icon": "MICROPHONE"
+    },
+    {
+      "key": "voice_engine",
+      "type": "combo",
+      "default": "自动",
+      "label": "Voice Engine",
+      "description": "自动=在线神经语音优先（自然，联网后 1-2 秒延迟，断网自动转本地）；仅本地=直接用 Windows 自带语音（零联网零延迟，音色较机械）",
+      "options": ["自动", "仅本地"],
+      "icon": "VOLUME"
+    },
+    {
       "key": "reactions",
       "type": "switch",
       "default": true,

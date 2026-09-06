@@ -18,9 +18,11 @@ from __future__ import annotations
 import atexit
 import os
 import random
+import re
+import threading
 from typing import Optional
 
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import QObject, QTimer, Signal
 
 import DyberPet.settings as settings
 from DyberPet.world_service import get_world
@@ -30,8 +32,36 @@ _SPEED_SPY = {'标准': 3600.0, '疾行': 1800.0, '悠远': 10800.0}
 TRAVEL_P_PER_TICK = 0.10     # 游历琐事概率/60s tick（约 10 分钟一条 → 2 小时游历 ≈ 12 条）
 IDLE_QIYU_P = 0.02           # 留守奇遇概率/60s tick（平均约 50 分钟一次）
 
+DECIDE_TIMEOUT_S = 45        # AI 决策看门狗：超时强制规则回退，绝不悬置
+DECIDE_LLM_TIMEOUT = 30      # Ollama 单次调用超时（秒）
+_DECIDE_ANS_RE = re.compile(
+    r'^\s*[「"“]?([A-Da-d])[」"”]?\s*(?:[|｜:：,，]\s*)?(.{0,60})')
+
+
+def parse_decision(text: str, choices: list) -> tuple:
+    """解析 LLM 决策输出「字母|理由」→ (choice_key|None, reason)。
+
+    字母按选项顺序映射（A=第一个选项）。解析失败/字母越界返回 (None, '')。
+    """
+    if not text or not choices:
+        return None, ''
+    m = _DECIDE_ANS_RE.match(str(text).strip().splitlines()[0] if str(text).strip() else '')
+    if not m:
+        return None, ''
+    idx = ord(m.group(1).upper()) - ord('A')
+    if idx < 0 or idx >= len(choices):
+        return None, ''
+    reason = re.sub(r'[「"“」"”]。?$', '', str(m.group(2) or '').strip())
+    return str(choices[idx].get('key', '')), reason[:60]
+
 _SAVE_NAME = os.path.join(settings.CONFIGDIR, 'data', 'world_state.json')
 _DATA_DIR = os.path.join(settings.BASEDIR, 'res', 'world')
+
+
+class _DecideSignal(QObject):
+    """AI 决策线程 → 主线程的跨线程投递（队列连接，天然线程安全）。"""
+
+    decided = Signal(dict)
 
 
 class WorldDaemon:
@@ -50,6 +80,11 @@ class WorldDaemon:
         self.tick_timer: Optional[QTimer] = None
         self.save_timer: Optional[QTimer] = None
         self._atexit_installed = False
+        # ---- 奇遇 AI 自主决策（v0.6.9：选择权归桌宠，玩家做观察者）----
+        self._decide_sig = _DecideSignal()
+        self._decide_sig.decided.connect(self._on_decided)
+        self._deciding_id: Optional[str] = None   # 正在决策的 pending id（防重复）
+        self._watchdog: Optional[QTimer] = None   # 决策超时兜底（绝不悬置请示）
 
     # ---- 生命周期 ----
     def start(self):
@@ -99,6 +134,8 @@ class WorldDaemon:
             if t is not None:
                 t.stop()
         self.tick_timer = self.save_timer = None
+        self._watchdog_stop()
+        self._deciding_id = None
         if self._atexit_installed:
             try:
                 atexit.unregister(self._atexit_save)
@@ -202,11 +239,170 @@ class WorldDaemon:
             self.announce(pending)
 
     def announce(self, pending: dict):
-        """奇遇请示演出：气泡一句 + 通知（绝不弹窗，角色面板应答）。"""
+        """奇遇演出：按模式分叉——AI 自主判断（默认）或请示玩家拍板。"""
+        if bool(getattr(settings, 'world_ai_decide', True)):
+            # 自主判断：只播事件本身，不需要玩家停下做什么
+            self.say(f"【奇遇·{pending['title']}】{pending['narrative']}")
+            self.notify(
+                f"奇遇「{pending['title']}」：它正在自行斟酌如何处置……"
+                f"稍后向你回禀")
+            self.request_decide()
+            return
         self.say(f"【请示·{pending['title']}】{pending['narrative']}")
         self.notify(
             f"奇遇请示「{pending['title']}」：{pending['narrative']}"
             f"（打开角色面板「修仙世界」，替我拿个主意）")
+
+    # ---- 奇遇 AI 自主决策（v0.6.9：LLM 只选方向，数值仍 100% 规则结算）----
+    def request_decide(self):
+        """对当前 pending 奇遇启动 AI 决策（幂等；adventure 插件归来奇遇也调这里）。"""
+        if self.world is None or self.choice is None:
+            return
+        pending = self.world.world.get('pending_choice')
+        if not pending or not bool(getattr(settings, 'world_ai_decide', True)):
+            return
+        pid = str(pending.get('id', ''))
+        if self._deciding_id == pid:
+            return                          # 已在斟酌这道题
+        self._deciding_id = pid
+        choices = list(pending.get('choices', []))
+        t = threading.Thread(target=self._decide_worker, args=(pending, choices),
+                             daemon=True)
+        t.start()
+        # 看门狗：LLM 挂死/超时也必须收敛，绝不悬置请示卡住后续奇遇
+        if self._watchdog is None:
+            self._watchdog = QTimer()
+            self._watchdog.setSingleShot(True)
+            self._watchdog.timeout.connect(self._decide_timeout)
+        self._watchdog.start(DECIDE_TIMEOUT_S * 1000)
+
+    def _decide_worker(self, pending: dict, choices: list):
+        """后台线程：以桌宠人格向 Ollama 请求抉择（同步调用，绝不进主线程）。"""
+        answer = None
+        try:
+            from DyberPet.persona_service import get_persona, _THINK_RE
+            persona = get_persona()
+            if persona.available():
+                letters = '\n'.join(
+                    f"{chr(ord('A') + i)}. {c.get('text', '')}"
+                    for i, c in enumerate(choices))
+                user = (f"【当前抉择】{pending.get('title', '奇遇')}\n"
+                        f"{pending.get('narrative', '')}\n你的选项：\n{letters}\n"
+                        f"只回答：选项字母|一句理由")
+                system = persona.build_prompt('decide', include_memories=False)
+                raw = persona._generate(system, user,
+                                        model=persona._default_model(),
+                                        num_predict=64,
+                                        timeout=DECIDE_LLM_TIMEOUT)
+                if raw:
+                    answer = parse_decision(_THINK_RE.sub('', raw), choices)
+        except Exception as e:  # noqa: BLE001
+            print(f'[world_daemon] decide worker error: {e!r}')
+        # answer=None（LLM 不可用/解析失败）→ 主线程槽内规则回退
+        self._decide_sig.decided.emit({
+            'id': str(pending.get('id', '')), 'ts': pending.get('ts'),
+            'key': answer[0] if answer else None,
+            'reason': answer[1] if answer else ''})
+
+    def _on_decided(self, payload: dict):
+        """主线程槽：校验 → 结算 → 兑现 → 汇报（数值 100% choice_service 掷骰）。"""
+        try:
+            self._watchdog_stop()
+            self._deciding_id = None
+            pending = (self.world.world.get('pending_choice')
+                       if self.world is not None else None)
+            if not pending or str(pending.get('id', '')) != payload.get('id'):
+                return                          # 已被处理/世界重置，丢弃迟到答案
+            key = payload.get('key')
+            choices = list(pending.get('choices', []))
+            valid = next((c for c in choices if c.get('key') == key), None)
+            if valid is None:
+                # 规则回退：随机一项（LLM 不可用时桌宠"随缘"处置）
+                if not choices:
+                    return
+                key = random.choice(choices).get('key')
+                payload['reason'] = ''
+            reason = str(payload.get('reason') or '').strip()
+            self._finalize_choice(pending, key, reason)
+        except Exception as e:  # noqa: BLE001
+            print(f'[world_daemon] on_decided error: {e!r}')
+
+    def _decide_timeout(self):
+        """看门狗：决策线程迟迟不归（Ollama 卡死等）→ 规则回退强制收敛。"""
+        try:
+            if self._deciding_id is None:
+                return
+            pending = (self.world.world.get('pending_choice')
+                       if self.world is not None else None)
+            if not pending or str(pending.get('id', '')) != self._deciding_id:
+                self._deciding_id = None
+                return
+            self._deciding_id = None
+            choices = list(pending.get('choices', []))
+            if choices:
+                self._finalize_choice(pending,
+                                      random.choice(choices).get('key'), '')
+        except Exception as e:  # noqa: BLE001
+            print(f'[world_daemon] decide timeout error: {e!r}')
+
+    def _watchdog_stop(self):
+        if self._watchdog is not None:
+            self._watchdog.stop()
+
+    def _finalize_choice(self, pending: dict, key: str, reason: str):
+        """结算 + 兑现 + 三级汇报（气泡一句 / 通知回禀 / 日志入流）。"""
+        result = self.choice.resolve(key)
+        if result is None:
+            return
+        choice_text = next((c.get('text', '') for c in pending.get('choices', [])
+                            if c.get('key') == key), '')
+        g = result.get('grants') or {}
+        if any(g.values()):
+            self.apply_player_grants([g])
+        # 抉择志（面板回放 + 持久化）
+        self.world.world['last_decision'] = {
+            'title': pending.get('title', ''), 'day': pending.get('day', 0),
+            'narrative': pending.get('narrative', ''),
+            'choice_text': choice_text, 'reason': reason,
+            'result_text': result.get('text', ''),
+            'grants': dict(g), 'echoes': bool(result.get('echoes')),
+            'ts': pending.get('ts'),
+        }
+        self.world.dirty = True
+        # 气泡：一句带过（L3）
+        self.say(f"「{pending.get('title', '')}」——我{choice_text}。")
+        # 通知：完整回禀（用户点名的"事后看一眼"渠道，独立于 world_notify_medium）
+        harvest = []
+        if int(g.get('exp', 0) or 0) > 0:
+            harvest.append(f"修为 +{int(g['exp'])}")
+        if int(g.get('stones', 0) or 0) > 0:
+            harvest.append(f"灵石 +{int(g['stones'])}")
+        if g.get('item'):
+            harvest.append(f"「{g['item']}」入背包")
+        if g.get('injury'):
+            harvest.append('受了些伤，修行暂缓')
+        echo_hint = '（因果已种下，回响不知何日归来）' \
+            if result.get('echoes') else ''
+        why = f"（{reason}）" if reason else ''
+        self.notify(
+            f"【抉择回禀】遇「{pending.get('title', '')}」，"
+            f"我{choice_text}{why}。\n{result.get('text', '')}"
+            + (f"\n收获：{'，'.join(harvest)}。" if harvest else '')
+            + echo_hint)
+        # 日志入流（游历直播线，L3 让翻日志时一定看见）
+        try:
+            self.world.player_log(
+                f"奇遇「{pending.get('title', '')}」：我{choice_text}{why}"
+                f"{result.get('text', '')}"
+                + (f"（收获：{'，'.join(harvest)}）" if harvest else ''), 3)
+        except Exception:  # noqa: BLE001
+            pass
+        try:
+            from DyberPet.persona_service import add_memory
+            add_memory(f"奇遇「{pending.get('title', '')}」我{choice_text}",
+                       ['world', 'choice'])
+        except Exception:  # noqa: BLE001
+            pass
 
     def apply_player_grants(self, grants=None):
         """世界结算的玩家收益（玩家回响/奇遇抉择）→ 修为/灵石/丹药/受伤。

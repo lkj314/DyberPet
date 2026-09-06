@@ -182,10 +182,18 @@ class _PetFacade(QObject):
         except Exception:  # noqa: BLE001
             pass
 
-    def speak(self, text, voice=None):
-        """语音播报：优先 edge-tts（联网、自然），失败/不可用时转 Windows 离线 SAPI。
-        离线兜底不依赖网络与 QMediaPlayer，保证一定有声音。"""
+    def speak(self, text, voice=None, local_only=None):
+        """语音播报。
+
+        双链路：edge-tts（微软在线神经语音，自然但需联网，1-2s 延迟）→
+        失败/不可用自动落 Windows 本地 SAPI（Huihui/Kangkang 等，零延迟但机械腔）。
+        ``local_only=True`` 跳过联网直接走本地（插件"仅本地语音"设置用）。
+        """
         if not text:
+            return
+        if local_only:
+            self._tts_log(f"speak(local_only): {text!r}")
+            self._speak_offline(text)
             return
         self._tts_log(f"speak: {text!r}")
         try:

@@ -14,7 +14,8 @@ from typing import Dict, List
 
 OUTCOME_TXT = {'大胜': '大获全胜，满载而归', '小胜': '顺利了结，略有斩获',
                '险胜': '险些折戟，总算脱身', '失利': '势不可为，仓皇而归',
-               '重伤': '拼死杀出，伤得不轻'}
+               '重伤': '拼死杀出，伤得不轻',
+               '召回': '中途召回，提前归来'}
 
 
 class _SafeDict(dict):
@@ -183,6 +184,10 @@ def preset_talisman(skeleton: dict, idx: int, total: int) -> str:
 
 def preset_return(skeleton: dict, outcome: str) -> str:
     """归来讲述的预设文案。"""
+    if outcome == '召回':
+        loc = skeleton.get('vars', {}).get('loc', '远方')
+        return (f"事有蹊跷，不宜久留——我已从{loc}提前脱身，"
+                f"所得虽薄，平安最要紧。")
     tpl = _tpl_of(skeleton)
     tales = tpl.get('tales') or CAT_TALES.get(skeleton.get('cat', ''),
                                               CAT_TALES['battle'])

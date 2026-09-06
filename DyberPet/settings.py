@@ -24,6 +24,7 @@ world_bubble_major = True     # L3 重大事件桌宠气泡提及
 world_notify_medium = False   # L2 中等事件系统通知（默认关，绝不吵）
 world_travel_log = True       # 本体游历琐事直播入流
 world_qiyu_choices = True     # 奇遇请示（抉择系统）
+world_ai_decide = True        # 奇遇抉择交给桌宠 AI 自主判断（False=回退玩家拍板）
 
 if platform == 'win32':
     basedir = ''
@@ -253,7 +254,7 @@ def init_settings():
            chat_model, chat_tts, chat_stt, chat_stt_always_listen, chat_voice, \
            day_night_on, day_start, night_start, \
            world_speed, world_bubble_major, world_notify_medium, \
-           world_travel_log, world_qiyu_choices, \
+           world_travel_log, world_qiyu_choices, world_ai_decide, \
            bangumi_notify, bangumi_remind_hour, bangumi_merge_notify, \
            bangumi_persona_quip, bangumi_show_cover
 
@@ -389,6 +390,7 @@ def init_settings():
             'world_travel_log', _old_world.get('travel_log', True)))
         world_qiyu_choices = bool(data_params.get(
             'world_qiyu_choices', _old_world.get('qiyu_choices', True)))
+        world_ai_decide = bool(data_params.get('world_ai_decide', True))
         plugins_settings.pop('xiuxian_world', None)   # 插件已退役，键位清掉
         #=====================================================
 
@@ -445,6 +447,7 @@ def init_settings():
         world_notify_medium = False
         world_travel_log = True
         world_qiyu_choices = True
+        world_ai_decide = True
         bangumi_notify = True
         bangumi_remind_hour = 20
         bangumi_merge_notify = True
@@ -461,7 +464,7 @@ def save_settings():
            chat_model, chat_tts, chat_stt, chat_stt_always_listen, chat_voice, \
            day_night_on, day_start, night_start, \
            world_speed, world_bubble_major, world_notify_medium, \
-           world_travel_log, world_qiyu_choices, \
+           world_travel_log, world_qiyu_choices, world_ai_decide, \
            bangumi_notify, bangumi_remind_hour, bangumi_merge_notify, \
            bangumi_persona_quip, bangumi_show_cover
 
@@ -488,6 +491,7 @@ def save_settings():
                'world_notify_medium':world_notify_medium,
                'world_travel_log':world_travel_log,
                'world_qiyu_choices':world_qiyu_choices,
+               'world_ai_decide':world_ai_decide,
                'bangumi_notify':bangumi_notify,
                'bangumi_remind_hour':bangumi_remind_hour,
                'bangumi_merge_notify':bangumi_merge_notify,

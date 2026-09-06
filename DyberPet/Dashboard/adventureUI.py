@@ -135,12 +135,15 @@ class AdventureStatusCard(SimpleCardWidget):
 class DispatchCard(SimpleCardWidget):
     """派出卡：秘境 + 时长 + 策略 → 实时成功率/收益预估 → 派出。"""
 
-    def __init__(self, card_w: int, svc, on_dispatch, parent=None):
+    def __init__(self, card_w: int, svc, on_dispatch, parent=None,
+                 on_recall=None):
         super().__init__(parent)
         self.setBorderRadius(5)
         self.setFixedSize(card_w, 170)
         self.svc = svc
         self.on_dispatch = on_dispatch
+        self.on_recall = on_recall
+        self._away = False
 
         vBox = QVBoxLayout(self)
         vBox.setContentsMargins(20, 10, 20, 12)
@@ -203,7 +206,11 @@ class DispatchCard(SimpleCardWidget):
 
     def _go(self):
         try:
-            self.on_dispatch(*self._selection())
+            if self._away:
+                if self.on_recall is not None:
+                    self.on_recall()
+            else:
+                self.on_dispatch(*self._selection())
         except Exception as e:  # noqa: BLE001
             print(f'[adventureUI] dispatch failed: {e!r}')
 
@@ -212,8 +219,15 @@ class DispatchCard(SimpleCardWidget):
         self_group = _self_group()
         st = svc.status()
         away = st['state'] == 'away'
-        self.goBtn.setEnabled(not away)
-        self.goBtn.setText('历练中…' if away else '派出历练')
+        self._away = away
+        self.goBtn.setEnabled(True)
+        self.goBtn.setText('中途召回' if away else '派出历练')
+        self.hintLabel.setText('历练中——点击「中途召回」可提前归来'
+                               '（收益按已历练时长折算）' if away else
+                               '历练归来带回修为、灵石与丹药；失败只减速不倒扣，'
+                               '也可中途召回避险')
+        if away:
+            return
         tier_idx, dur_key, risk_key = self._selection()
         tier = self._tiers[tier_idx]
         if self_group < tier['req']:
@@ -367,7 +381,8 @@ class adventureInterface(ScrollArea):
 
         # 悬浮卡（parent=ScrollArea + move()）
         self.StatusCard = AdventureStatusCard(self._card_w, self)
-        self.DispatchCard = DispatchCard(self._card_w, self.svc, self._dispatch, self)
+        self.DispatchCard = DispatchCard(self._card_w, self.svc, self._dispatch,
+                                         self, on_recall=self._recall)
 
         # 滚动区卡（⚠️ parent=scrollWidget——ExpandLayout.addWidget 不重挂 parent！）
         self.OverviewCard = RealmOverviewCard(self._card_w, self.scrollWidget)
@@ -440,5 +455,16 @@ class adventureInterface(ScrollArea):
                             parent=self.window(), position=InfoBarPosition.TOP)
         else:
             InfoBar.warning('派出失败', result.get('msg', ''), duration=3000,
+                            parent=self.window(), position=InfoBarPosition.TOP)
+        self.refresh()
+
+    # ---- 中途召回（收益折算由 core 结算；入账演出由插件 tick 统一处理）----
+    def _recall(self):
+        result = self.svc.recall()
+        if result.get('ok'):
+            InfoBar.success('已传讯召回', result.get('msg', ''), duration=4000,
+                            parent=self.window(), position=InfoBarPosition.TOP)
+        else:
+            InfoBar.warning('召回失败', result.get('msg', ''), duration=3000,
                             parent=self.window(), position=InfoBarPosition.TOP)
         self.refresh()

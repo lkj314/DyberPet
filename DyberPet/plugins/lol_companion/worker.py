@@ -28,10 +28,11 @@ class LoLCompanionWorker(QThread):
         self._stop_event = threading.Event()
 
     def run(self):
+        # 气泡/TTS 的开关在消费端（main._on_caster_line）按设置分流；
+        # 这里永远发线，保证 TTS 关、气泡开（或反之）都能独立生效
         caster_worker(
             self.reader, self.caster, self.interval, self.cfg,
-            emit=lambda line: self.caster_line.emit(line)
-            if self.cfg.get('bubble', True) else None,
+            emit=lambda line: self.caster_line.emit(line),
             stop=self._stop_event,
             emit_meta=lambda prio, evs, chs, me:
                 self.companion_react.emit(emotion_for(prio, evs, chs, me).value)

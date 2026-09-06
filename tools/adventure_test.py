@@ -195,4 +195,37 @@ expect = {'大胜': 1440, '小胜': 1200, '险胜': 720, '失利': 240, '重伤'
 assert ret['exp'] == expect[ret['outcome']], (ret['outcome'], ret['exp'])
 print(f"REWARD_OK {ret['outcome']} → exp={ret['exp']}（与参数表一致）")
 
+# ---------- 13) 中途召回（收益按时长折算 + 避险不挂伤）----------
+core.realm_idx = 0
+s = fresh_service()
+r = s.recall()
+assert not r['ok'] and '并未在外' in r['msg'], r          # 空手召回拒绝
+random.seed(11)
+s.dispatch(make_spec(0, '中程'), {'tid': 'wolf', 'cat': 'battle',
+                                  'title': '遭遇妖狼',
+                                  'vars': {'beast': '妖狼', 'loc': '青云山'}},
+           now=NOW)
+dur = s.status()['duration']
+s.tick(NOW + dur * 0.5 + 1)                # 推进到约半程
+full_exp, full_stones = s.state['exp'], s.state['stones']
+r = s.recall()
+assert r['ok'], r
+ret = r['result']
+frac = ret['elapsed'] / dur
+assert 0.45 < frac < 0.56, frac
+assert ret['outcome'] == '召回' and ret['recalled'] is True
+assert ret['exp'] == int(full_exp * frac), (ret['exp'], full_exp, frac)
+assert ret['stones'] == int(full_stones * frac)
+assert ret['pill'] is None and ret['injury'] is None   # 召回避险：丹药不寻获、伤不落身
+assert s.status()['state'] == 'idle'
+assert s.recent_records()[-1]['outcome'] == '召回'
+evs = s.tick(NOW + dur * 0.6)              # 召回事件由下一次 tick 吐出
+rets = [e for e in evs if e['type'] == 'return']
+assert len(rets) == 1 and rets[0]['result']['recalled'], evs
+assert not [e for e in s.tick(NOW + dur) ] # 无残留事件，也不会再触发归来
+s.dispatch(make_spec(0, '短程'), {}, now=NOW + dur)    # 召回后可立即再派
+assert s.status()['state'] == 'away'
+print(f"RECALL_OK 半程召回 exp={ret['exp']}(全程{full_exp}×{frac:.0%})，"
+      f"记录/入账/再派全通")
+
 print('\nALL ADVENTURE_CORE_TESTS_PASSED')
