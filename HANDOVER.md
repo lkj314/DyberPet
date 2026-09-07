@@ -269,7 +269,31 @@ taskkill /F /IM DyberPet.exe
 
 ---
 
-## 9. 给接手 AI 的工作方式建议（用户偏好速记）
+## 9. 发布流程：GitHub Release（打包供下载）
+
+用户希望仓库不只有源码，还要**可直接下载的压缩包**。流程（2026-09-08 实测）：
+
+```bat
+:: 1) 打包（排除用户存档！）——可复用脚本，参数=版本号
+.venv\Scripts\python.exe tools\make_release_zip.py v0.7.0
+::    源 dist/DyberPet → dist/DyberPet-<ver>-win64.zip（实测 703MB → 300MB，约 60s）
+::    排除：顶层 data/（真实存档：修为/追番订阅/人设记忆/settings.json）+ *.pyc
+::    zip 内置空 data/ 占位，程序首次运行自建存档
+
+:: 2) 创建 Release（gh release create 会被 workflow scope 卡，改用 REST API）
+gh api repos/lkj314/DyberPet/releases -X POST ^
+    -f tag_name=v0.7.0 -f name="标题" -F body=@build/rel_notes.md
+
+:: 3) 上传资产（必须 -R 显式指定仓库！）
+gh release upload v0.7.0 dist\DyberPet-v0.7.0-win64.zip -R lkj314/DyberPet
+```
+
+**三个坑（都踩过）**：
+1. **`-R lkj314/DyberPet` 不能省**——gh 从 remote 推断仓库时会选中 upstream（`ChaozhongLiu/DyberPet`，上游官方），报假错 `release not found`。
+2. **release notes 文件别放 `/tmp`**——Git Bash 的 `/tmp` 是 MSYS 路径，Windows 原生 gh 读不到；放项目内被 gitignore 的 `build/rel_notes.md`。
+3. **push 后必须核对远程**——`git ls-remote origin main`，别只看命令回显（曾出现 commit 成功但 push 输出被吞、远程没更新的情况）。
+
+## 10. 给接手 AI 的工作方式建议（用户偏好速记）
 
 - **先读代码再动手**，先诊断再行动；方案先给用户过目再执行（尤其数据库/破坏性操作）。
 - 最小化改动，拒绝过度工程；交付物必须是可直接使用的生产级 EXE。
